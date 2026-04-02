@@ -254,13 +254,17 @@ function PriceCardGrid({
 }
 
 export default function Home() {
-  const [query, setQuery] = useState("");
-  const [currency, setCurrency] = useState<CurrencyCode>("USD");
+  const [query, setQuery] = useState(() => {
+    if (typeof window === "undefined") return "";
+    const urlQ = new URLSearchParams(window.location.search).get("q");
+    return urlQ && urlQ.trim().length >= 2 ? urlQ.trim() : "";
+  });
+  const [currency, setCurrency] = useState<CurrencyCode>(getStoredCurrency);
   const [typeFilter, setTypeFilter] = useState<TypeFilter>("all");
   const [gameFilter, setGameFilter] = useState<string>("all");
-  const [viewMode, setViewModeState] = useState<ViewMode>("grid");
+  const [viewMode, setViewModeState] = useState<ViewMode>(getStoredViewMode);
   const [results, setResults] = useState<SearchResponse | null>(null);
-  const [homeBg, setHomeBg] = useState<string | null>(null);
+  const [homeBg, setHomeBg] = useState<string | null>(getHomeBackground);
   const [rates, setRates] = useState<Record<string, number>>({ USD: 1 });
   const [loading, setLoading] = useState(false);
   const [scraping, setScraping] = useState(false);
@@ -268,15 +272,19 @@ export default function Home() {
   const [error, setError] = useState("");
   const [rateLimited, setRateLimited] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
-  const [recentSearches, setRecentSearches] = useState<string[]>([]);
+  const [recentSearches, setRecentSearches] = useState<string[]>(() => {
+    if (typeof window === "undefined") return [];
+    const saved = localStorage.getItem("recent_searches");
+    return saved ? JSON.parse(saved) : [];
+  });
   const ITEMS_PER_PAGE = 21;
   const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
   const sentinelRef = useRef<HTMLDivElement>(null);
   const [showRecent, setShowRecent] = useState(false);
   const [headerHeight, setHeaderHeight] = useState(0);
-  const [selectedStores, setSelectedStoresState] = useState<Set<string>>(new Set());
+  const [selectedStores, setSelectedStoresState] = useState<Set<string>>(getStoredStores);
   const [showStoreDropdown, setShowStoreDropdown] = useState(false);
-  const [cheapestOnly, setCheapestOnlyState] = useState(false);
+  const [cheapestOnly, setCheapestOnlyState] = useState(getStoredCheapestOnly);
   const inputRef = useRef<HTMLInputElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
   const storeDropdownRef = useRef<HTMLDivElement>(null);
@@ -297,60 +305,6 @@ export default function Home() {
   function setCheapestOnly(value: boolean) {
     setCheapestOnlyState(value);
     localStorage.setItem("cheapest_only", String(value));
-  }
-
-  useEffect(() => {
-    const storedCurrency = getStoredCurrency();
-    setCurrency(storedCurrency);
-    // Auto-detect currency if user never chose one
-    if (!localStorage.getItem("currency")) {
-      detectUserCurrency().then((detected) => {
-        if (detected) {
-          setCurrency(detected);
-          localStorage.setItem("currency", detected);
-        }
-      });
-    }
-    setHomeBg(getHomeBackground());
-    setViewModeState(getStoredViewMode());
-    setSelectedStoresState(getStoredStores());
-    setCheapestOnlyState(getStoredCheapestOnly());
-    getExchangeRates()
-      .then(setRates)
-      .catch((err) => console.error("Failed to load rates:", err));
-
-    const saved = localStorage.getItem("recent_searches");
-    if (saved) setRecentSearches(JSON.parse(saved));
-
-    // Search from URL query param
-    const urlQ = new URLSearchParams(window.location.search).get("q");
-    if (urlQ && urlQ.trim().length >= 2) {
-      setQuery(urlQ.trim());
-      doSearch(urlQ.trim());
-    }
-
-    const ro = new ResizeObserver(([entry]) => {
-      setHeaderHeight(entry.contentRect.height);
-    });
-    if (headerRef.current) ro.observe(headerRef.current);
-
-    return () => ro.disconnect();
-  }, []);
-
-  useEffect(() => {
-    if (!showStoreDropdown) return;
-    function handleClickOutside(e: MouseEvent) {
-      if (storeDropdownRef.current && !storeDropdownRef.current.contains(e.target as Node)) {
-        setShowStoreDropdown(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [showStoreDropdown]);
-
-  function handleCurrencyChange(code: CurrencyCode) {
-    setCurrency(code);
-    localStorage.setItem("currency", code);
   }
 
   function doSearch(rawTerm: string) {
@@ -427,6 +381,49 @@ export default function Home() {
     };
   }
 
+  useEffect(() => {
+    // Auto-detect currency if user never chose one
+    if (!localStorage.getItem("currency")) {
+      detectUserCurrency().then((detected) => {
+        if (detected) {
+          setCurrency(detected);
+          localStorage.setItem("currency", detected);
+        }
+      });
+    }
+    getExchangeRates()
+      .then(setRates)
+      .catch((err) => console.error("Failed to load rates:", err));
+
+    // Search from URL query param
+    const urlQ = new URLSearchParams(window.location.search).get("q");
+    if (urlQ && urlQ.trim().length >= 2) {
+      Promise.resolve().then(() => doSearch(urlQ.trim()));
+    }
+
+    const ro = new ResizeObserver(([entry]) => {
+      setHeaderHeight(entry.contentRect.height);
+    });
+    if (headerRef.current) ro.observe(headerRef.current);
+
+    return () => ro.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!showStoreDropdown) return;
+    function handleClickOutside(e: MouseEvent) {
+      if (storeDropdownRef.current && !storeDropdownRef.current.contains(e.target as Node)) {
+        setShowStoreDropdown(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showStoreDropdown]);
+
+  function handleCurrencyChange(code: CurrencyCode) {
+    setCurrency(code);
+    localStorage.setItem("currency", code);
+  }
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault();
@@ -907,7 +904,7 @@ export default function Home() {
                   })()}
                 </div>
               )}
-              {displayPrices.length > visibleCount && (
+              {displayPrices && displayPrices.length > visibleCount && (
                 <div ref={sentinelRef} className="flex items-center justify-center py-8 gap-3">
                   <div className="w-5 h-5 border-2 border-zinc-700 border-t-blue-500 rounded-full animate-spin" />
                   <span className="text-sm text-zinc-500">Loading more...</span>

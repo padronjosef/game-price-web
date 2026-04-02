@@ -43,7 +43,7 @@ export function FeaturedCarousel({ onSelect, onRateLimited }: FeaturedCarouselPr
     if (!el) return;
 
     let animationId: number;
-    let autoSpeed = 0.5;
+    const autoSpeed = 0.5;
     let dragging = false;
     let hovering = false;
     let startX = 0;
