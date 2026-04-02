@@ -37,7 +37,17 @@ The app runs on `http://localhost:3000` by default.
 | `NEXT_PUBLIC_API_URL` | `http://localhost:3002/api` | Backend API URL |
 | `PORT` | `3000` | Dev server port |
 
-> The backend API must be running for search to work. See [game-price-api](https://github.com/jose-padron/game-price-api) and [game-price-infra](https://github.com/jose-padron/game-price-infra) for setup.
+## Related Repos
+
+This project is part of a multi-repo setup. All three repos are needed to run the full stack:
+
+| Repo | Description |
+|------|-------------|
+| [game-price-api](https://github.com/padronjosef/game-price-api) | Backend API (NestJS) |
+| **game-price-web** (this repo) | Frontend |
+| [game-price-infra](https://github.com/padronjosef/game-price-infra) | Docker Compose and infrastructure |
+
+> The easiest way to get everything running is via Docker Compose in the [infra repo](https://github.com/padronjosef/game-price-infra). Clone all three repos as siblings and run `docker compose up` from `game-price-infra/`.
 
 ## Project Structure
 
