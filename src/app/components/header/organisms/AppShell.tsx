@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useMemo } from "react";
+import { useEffect, useRef, useMemo, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { HOME_BACKGROUNDS } from "../../../lib/stores";
@@ -19,6 +19,11 @@ import { useFilterStore, selectAllStoresSelected } from "../../../stores/useFilt
 import { useSearchStore } from "../../../stores/useSearchStore";
 import { useUIStore } from "../../../stores/useUIStore";
 import type { TypeFilter } from "../../../lib/stores";
+import { HeaderSkeleton } from "../atoms/HeaderSkeleton";
+
+const subscribe = () => () => {};
+const useMounted = () =>
+  useSyncExternalStore(subscribe, () => true, () => false);
 
 const CurrencySelector = dynamic(() =>
   import("../molecules/CurrencySelector").then((m) => ({ default: m.CurrencySelector })),
@@ -32,6 +37,7 @@ const StoreDropdown = dynamic(() =>
 );
 
 export const AppShell = ({ children }: { children: React.ReactNode }) => {
+  const mounted = useMounted();
   const router = useRouter();
   const headerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -190,6 +196,8 @@ export const AppShell = ({ children }: { children: React.ReactNode }) => {
     triggerFilterFade();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedStores, cheapestOnly, typeFilter, gameFilter]);
+
+  if (!mounted) return <HeaderSkeleton>{children}</HeaderSkeleton>;
 
   return (
     <div className="flex flex-col min-h-screen relative">
