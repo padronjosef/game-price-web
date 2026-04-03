@@ -2,8 +2,8 @@
 
 import { useEffect, useState, useRef, useMemo } from "react";
 import Image from "next/image";
-import { Skeleton } from "../../shared/atoms/Skeleton";
 import { API_URL } from "../../../lib/stores";
+import { FeaturedCarouselSkeleton } from "./FeaturedCarouselSkeleton";
 
 type FeaturedGame = {
   name: string;
@@ -15,10 +15,6 @@ type FeaturedCarouselProps = {
   onSelect: (name: string) => void;
   onRateLimited?: () => void;
 }
-
-const SkeletonSlide = () => {
-  return <Skeleton className="shrink-0 w-65 md:w-100 aspect-video" />;
-};
 
 export const FeaturedCarousel = ({
   onSelect,
@@ -130,6 +126,8 @@ export const FeaturedCarousel = ({
 
   const doubled = useMemo(() => [...games, ...games], [games]);
 
+  if (loading) return <FeaturedCarouselSkeleton />;
+
   return (
     <div
       className="w-full relative z-10 mb-10 mx-auto"
@@ -153,10 +151,7 @@ export const FeaturedCarousel = ({
             "linear-gradient(to right, transparent 0%, black 13.5%, black 86.5%, transparent 100%)",
         }}
       >
-        {(loading || games.length === 0) &&
-          [...Array(6)].map((_, i) => <SkeletonSlide key={`skel-${i}`} />)}
-        {!loading &&
-          doubled.map((game, i) => (
+        {doubled.map((game, i) => (
             <button
               key={`${game.appId}-${i}`}
               onClick={() => onSelect(game.name)}

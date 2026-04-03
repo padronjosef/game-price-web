@@ -4,8 +4,6 @@ import { useEffect, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { HOME_BACKGROUNDS } from "../../../lib/stores";
-import { HeaderSkeleton } from "../atoms/HeaderSkeleton";
-import { useMounted } from "../../../hooks/useMounted";
 import { getHomeBackground } from "../../../lib/storage";
 import { BackgroundImage } from "../../shared/atoms/BackgroundImage";
 import { useCrossfade } from "../../../hooks/useCrossfade";
@@ -35,7 +33,6 @@ const StoreDropdown = dynamic(() =>
 );
 
 export const AppShell = ({ children }: { children: React.ReactNode }) => {
-  const mounted = useMounted();
   const router = useRouter();
   const headerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -177,6 +174,7 @@ export const AppShell = ({ children }: { children: React.ReactNode }) => {
     useSearchStore.getState().initRates();
     const saved = localStorage.getItem("recent_searches");
     if (saved) useSearchStore.setState({ recentSearches: JSON.parse(saved) });
+    useSearchStore.setState({ initializing: false });
     homeBgRef.current = getHomeBackground();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -199,8 +197,6 @@ export const AppShell = ({ children }: { children: React.ReactNode }) => {
     triggerFilterFade();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedStores, cheapestOnly, typeFilter, gameFilter, currency, viewMode]);
-
-  if (!mounted) return <HeaderSkeleton>{children}</HeaderSkeleton>;
 
   return (
     <div className="flex flex-col min-h-screen relative">

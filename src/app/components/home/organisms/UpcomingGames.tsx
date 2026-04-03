@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import { GameCard, SkeletonCard } from "../../shared/molecules/GameCard";
+import { GameCard } from "../../shared/molecules/GameCard";
 import { API_URL } from "../../../lib/stores";
 import { useFilterStore } from "../../../stores/useFilterStore";
+import { UpcomingGamesSkeleton } from "./UpcomingGamesSkeleton";
 
 type UpcomingGame = {
   name: string;
@@ -51,6 +52,8 @@ export const UpcomingGames = ({
       .catch(() => setLoading(false));
   }, [onRateLimited]);
 
+  if (loading) return <UpcomingGamesSkeleton />;
+
   return (
     <div className="w-full max-w-5xl mx-auto px-4 mb-6 relative z-10">
       <h2 className="text-lg font-bold text-white mb-3">
@@ -59,10 +62,7 @@ export const UpcomingGames = ({
       <div
         className={`animate-fade-in-up ${viewMode === "list" ? "space-y-3" : "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6"}`}
       >
-        {(loading || games.length === 0) &&
-          [...Array(12)].map((_, i) => <SkeletonCard key={`skel-${i}`} />)}
-        {!loading &&
-          games.map((game) => (
+        {games.map((game) => (
             <GameCard
               key={game.appId}
               href={game.url}

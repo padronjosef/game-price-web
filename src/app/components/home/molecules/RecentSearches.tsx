@@ -1,6 +1,7 @@
 "use client";
 
 import { CloseButton } from "../../shared/atoms/CloseButton";
+import { RecentSearchesSkeleton } from "./RecentSearchesSkeleton";
 import { useSearchStore } from "../../../stores/useSearchStore";
 
 type RecentSearchesProps = {
@@ -13,7 +14,9 @@ export const RecentSearches = ({
   onRemove,
 }: RecentSearchesProps) => {
   const searches = useSearchStore((s) => s.recentSearches);
+  const initializing = useSearchStore((s) => s.initializing);
 
+  if (initializing) return <RecentSearchesSkeleton />;
   if (searches.length === 0) return null;
 
   return (
