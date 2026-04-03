@@ -493,9 +493,11 @@ export default function Home() {
   }, [gameNames]);
 
   useEffect(() => {
-    setFilterFade(true);
-    clearTimeout(filterFadeRef.current);
-    filterFadeRef.current = setTimeout(() => setFilterFade(false), 200);
+    queueMicrotask(() => {
+      setFilterFade(true);
+      clearTimeout(filterFadeRef.current);
+      filterFadeRef.current = setTimeout(() => setFilterFade(false), 200);
+    });
   }, [selectedStores, cheapestOnly, typeFilter, gameFilter]);
 
   // Hero background: use the high-res background_raw from Steam
