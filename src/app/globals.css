@@ -1,4 +1,8 @@
 @import "tailwindcss";
+
+html {
+  overflow-y: scroll;
+}
 @source "../../src/**/*.{ts,tsx}";
 
 @theme inline {
