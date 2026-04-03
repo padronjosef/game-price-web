@@ -17,7 +17,6 @@ export const SearchTemplate = () => {
   const prevQueryRef = useRef("");
 
   const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
-  const sentinelRef = useRef<HTMLDivElement>(null);
 
   // Search store
   const results = useSearchStore((s) => s.results);
@@ -53,9 +52,8 @@ export const SearchTemplate = () => {
   }, [typeFilter, gameFilter]);
 
   // Infinite scroll
-  useEffect(() => {
-    const el = sentinelRef.current;
-    if (!el) return;
+  const sentinelCallback = useCallback((node: HTMLDivElement | null) => {
+    if (!node) return;
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting)
@@ -63,7 +61,7 @@ export const SearchTemplate = () => {
       },
       { rootMargin: "200px" },
     );
-    observer.observe(el);
+    observer.observe(node);
     return () => observer.disconnect();
   }, []);
 
@@ -115,26 +113,15 @@ export const SearchTemplate = () => {
         {showSkeleton && <SearchSkeleton />}
 
         {!loading && results && (
-          <>
-            <PriceGrid
-              prices={displayPrices || []}
-              viewMode={viewMode}
-              displayPrice={displayPrice}
-              visibleCount={visibleCount}
-              typeFilter={typeFilter}
-            />
-            {displayPrices && displayPrices.length > visibleCount && (
-              <div
-                ref={sentinelRef}
-                className="flex items-center justify-center gap-3 bg-zinc-900 rounded-lg mx-auto max-w-xs px-6 py-4"
-              >
-                <div className="w-6 h-6 border-2 border-zinc-700 border-t-blue-500 rounded-full animate-spin" />
-                <span className="text-base text-zinc-300 font-medium">
-                  Loading more...
-                </span>
-              </div>
-            )}
-          </>
+          <PriceGrid
+            prices={displayPrices || []}
+            viewMode={viewMode}
+            displayPrice={displayPrice}
+            visibleCount={visibleCount}
+            typeFilter={typeFilter}
+            showLoadMore={!!displayPrices && displayPrices.length > visibleCount}
+            sentinelRef={sentinelCallback}
+          />
         )}
 
         {!loading && !results && q && lastUpdated && (

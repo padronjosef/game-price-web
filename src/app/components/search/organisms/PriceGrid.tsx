@@ -2,6 +2,8 @@
 
 import { AnimatePresence } from "motion/react";
 import { PriceCard } from "../molecules/PriceCard";
+import { SkeletonCard } from "../../shared/molecules/GameCard";
+import { useGridColumns } from "../../../hooks/useGridColumns";
 import type { PriceResult, TypeFilter, ViewMode } from "../../../lib/stores";
 
 type PriceGridProps = {
@@ -10,6 +12,8 @@ type PriceGridProps = {
   displayPrice: (amount: number, from?: string) => string;
   visibleCount: number;
   typeFilter: TypeFilter;
+  showLoadMore?: boolean;
+  sentinelRef?: (node: HTMLDivElement | null) => void;
 };
 
 const TYPE_GROUPS = [
@@ -26,14 +30,23 @@ const groupByType = (prices: PriceResult[]) => {
   })).filter((g) => g.items.length > 0);
 };
 
+const getSkeletonCount = (itemCount: number, columns: number) => {
+  if (columns === 1) return 1;
+  const remainder = itemCount % columns;
+  const fillRow = remainder === 0 ? 0 : columns - remainder;
+  return fillRow + columns;
+};
+
 const PriceList = ({
   prices,
   viewMode,
   displayPrice,
+  skeletonCount = 0,
 }: {
   prices: PriceResult[];
   viewMode: ViewMode;
   displayPrice: (amount: number, from?: string) => string;
+  skeletonCount?: number;
 }) => {
   return (
     <div
@@ -53,6 +66,10 @@ const PriceList = ({
           />
         ))}
       </AnimatePresence>
+      {skeletonCount > 0 &&
+        [...Array(skeletonCount)].map((_, i) => (
+          <SkeletonCard key={`skel-${i}`} />
+        ))}
     </div>
   );
 };
@@ -63,7 +80,11 @@ export const PriceGrid = ({
   displayPrice,
   visibleCount,
   typeFilter,
+  showLoadMore = false,
+  sentinelRef,
 }: PriceGridProps) => {
+  const columns = useGridColumns();
+
   if (prices.length === 0) {
     return (
       <p className="text-zinc-400">
@@ -75,12 +96,20 @@ export const PriceGrid = ({
   }
 
   if (typeFilter !== "all") {
+    const visible = prices.slice(0, visibleCount);
+    const skeletons = showLoadMore
+      ? viewMode === "list" ? 1 : getSkeletonCount(visible.length, columns)
+      : 0;
     return (
-      <PriceList
-        prices={prices.slice(0, visibleCount)}
-        viewMode={viewMode}
-        displayPrice={displayPrice}
-      />
+      <>
+        <PriceList
+          prices={visible}
+          viewMode={viewMode}
+          displayPrice={displayPrice}
+          skeletonCount={skeletons}
+        />
+        {showLoadMore && <div ref={sentinelRef} />}
+      </>
     );
   }
 
@@ -97,18 +126,26 @@ export const PriceGrid = ({
 
   return (
     <div className="space-y-6">
-      {visibleGroups.map((group) => (
-        <div key={group.type}>
-          <h3 className="text-base font-semibold text-white tracking-wider mb-2">
-            <span className="bg-black/70 px-2 py-1 rounded">{group.label}</span>
-          </h3>
-          <PriceList
-            prices={group.items}
-            viewMode={viewMode}
-            displayPrice={displayPrice}
-          />
-        </div>
-      ))}
+      {visibleGroups.map((group, gi) => {
+        const isLast = gi === visibleGroups.length - 1;
+        const skeletons = showLoadMore && isLast
+          ? viewMode === "list" ? 1 : getSkeletonCount(group.items.length, columns)
+          : 0;
+        return (
+          <div key={group.type}>
+            <h3 className="text-base font-semibold text-white tracking-wider mb-2">
+              <span className="bg-black/70 px-2 py-1 rounded">{group.label}</span>
+            </h3>
+            <PriceList
+              prices={group.items}
+              viewMode={viewMode}
+              displayPrice={displayPrice}
+              skeletonCount={skeletons}
+            />
+          </div>
+        );
+      })}
+      {showLoadMore && <div ref={sentinelRef} />}
     </div>
   );
 };
