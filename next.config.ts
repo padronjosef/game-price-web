@@ -1,7 +1,5 @@
 import type { NextConfig } from "next";
-import { readFileSync } from "fs";
-
-const pkg = JSON.parse(readFileSync("./package.json", "utf-8"));
+import pkg from "./package.json";
 
 const nextConfig: NextConfig = {
   images: {
