@@ -30,12 +30,10 @@ export const useUIStore = create<UIState & UIActions>()((set) => ({
 
   // Actions
   setMobileMenuOpen: (value) => {
-    set((state) => {
-      const open =
-        typeof value === "function" ? value(state.mobileMenuOpen) : value;
-      document.body.style.overflow = open ? "hidden" : "";
-      return { mobileMenuOpen: open };
-    });
+    set((state) => ({
+      mobileMenuOpen:
+        typeof value === "function" ? value(state.mobileMenuOpen) : value,
+    }));
   },
 
   setInputFocused: (inputFocused) => set({ inputFocused }),
