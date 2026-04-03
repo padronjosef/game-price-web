@@ -337,12 +337,14 @@ export default function Home() {
     // Search from URL query param
     const urlQ = new URLSearchParams(window.location.search).get("q");
     if (urlQ && urlQ.trim().length >= 2) {
-      setQuery(urlQ.trim());
-      setLoading(true);
-      setInitializing(false);
-      doSearch(urlQ.trim());
+      queueMicrotask(() => {
+        setQuery(urlQ.trim());
+        setLoading(true);
+        setInitializing(false);
+        doSearch(urlQ.trim());
+      });
     } else {
-      setInitializing(false);
+      queueMicrotask(() => setInitializing(false));
     }
 
     const ro = new ResizeObserver(([entry]) => {
