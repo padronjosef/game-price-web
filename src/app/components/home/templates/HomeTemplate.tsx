@@ -15,10 +15,9 @@ const UpcomingGames = dynamic(() =>
 
 export const HomeTemplate = () => {
   const router = useRouter();
-  const recentSearches = useSearchStore((s) => s.recentSearches);
-  const removeRecentSearch = useSearchStore((s) => s.removeRecentSearch);
   const setQuery = useSearchStore((s) => s.setQuery);
   const doSearch = useSearchStore((s) => s.doSearch);
+  const removeRecentSearch = useSearchStore((s) => s.removeRecentSearch);
   const setRateLimited = useUIStore((s) => s.setRateLimited);
 
   const handleSelect = (name: string) => {
@@ -30,7 +29,6 @@ export const HomeTemplate = () => {
   return (
     <div className="animate-fade-in-up">
       <RecentSearches
-        searches={recentSearches}
         onSelect={handleSelect}
         onRemove={removeRecentSearch}
       />
