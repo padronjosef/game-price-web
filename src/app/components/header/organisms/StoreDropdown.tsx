@@ -28,12 +28,12 @@ export const StoreDropdown = () => {
     <Dropdown
       trigger={
         <>
-          Stores
           {!allStoresSelected && (
             <span className="bg-zinc-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
               {noneSelected ? 0 : selectedStores.size}
             </span>
           )}
+          Stores
         </>
       }
       active={!allStoresSelected}

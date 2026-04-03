@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { Dropdown } from "../../shared/atoms/Dropdown";
-import { CURRENCIES, getCountryForCurrency } from "../../../lib/currency";
+import { Dropdown, useDropdownClose } from "../../shared/atoms/Dropdown";
+import { GLOBAL_CURRENCIES, LATAM_CURRENCIES, getCountryForCurrency } from "../../../lib/currency";
 import type { CurrencyCode } from "../../../lib/stores/types";
 
 type CurrencySelectorProps = {
@@ -23,10 +23,9 @@ const FlagIcon = ({ country }: { country: string }) => (
   />
 );
 
-const GLOBAL_CURRENCIES = new Set(["USD", "EUR", "GBP", "CAD", "AUD", "JPY"]);
 
 type CurrencyButtonProps = {
-  currency: (typeof CURRENCIES)[number];
+  currency: (typeof GLOBAL_CURRENCIES)[number] | (typeof LATAM_CURRENCIES)[number];
   value: CurrencyCode;
   availableRates: Record<string, number>;
   onChange: (code: CurrencyCode) => void;
@@ -42,6 +41,7 @@ const CurrencyButton = ({
   hoveredCode,
   onHover,
 }: CurrencyButtonProps) => {
+  const close = useDropdownClose();
   const available = currency.code === "USD" || currency.code in availableRates;
   return (
     <div className="relative">
@@ -51,6 +51,7 @@ const CurrencyButton = ({
         onClick={() => {
           if (!available) return;
           onChange(currency.code);
+          close?.();
         }}
         onMouseEnter={() => onHover(currency.code)}
         onMouseLeave={() => onHover(null)}
@@ -93,10 +94,10 @@ export const CurrencySelector = ({
       panelClassName="min-w-54 py-2 grid grid-cols-2 gap-x-1"
     >
       <div>
-        <div className="px-4 py-1 text-[10px] uppercase tracking-wider text-zinc-500 font-semibold">
+        <div className="px-3 py-1 text-xs font-bold text-white uppercase tracking-wider">
           Global
         </div>
-        {CURRENCIES.filter((c) => GLOBAL_CURRENCIES.has(c.code)).map((c) => (
+        {GLOBAL_CURRENCIES.map((c) => (
           <CurrencyButton
             key={c.code}
             currency={c}
@@ -108,11 +109,11 @@ export const CurrencySelector = ({
           />
         ))}
       </div>
-      <div>
-        <div className="px-4 py-1 text-[10px] uppercase tracking-wider text-zinc-500 font-semibold">
+      <div className="border-l border-zinc-700">
+        <div className="px-3 py-1 text-xs font-bold text-white uppercase tracking-wider">
           Latam
         </div>
-        {CURRENCIES.filter((c) => !GLOBAL_CURRENCIES.has(c.code)).map((c) => (
+        {LATAM_CURRENCIES.map((c) => (
           <CurrencyButton
             key={c.code}
             currency={c}

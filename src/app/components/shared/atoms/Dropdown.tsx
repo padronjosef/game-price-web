@@ -1,8 +1,12 @@
 "use client";
 
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState, createContext, useContext } from "react";
 import { Button } from "./Button";
 import { ChevronIcon } from "./ChevronIcon";
+import { DROPDOWN_DURATION } from "./animations";
+
+const DropdownContext = createContext<(() => void) | null>(null);
+export const useDropdownClose = () => useContext(DropdownContext);
 
 type DropdownProps = {
   trigger: React.ReactNode;
@@ -23,6 +27,7 @@ export const Dropdown = ({
 }: DropdownProps) => {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const close = () => setOpen(false);
 
   useEffect(() => {
     if (!open) return;
@@ -44,13 +49,15 @@ export const Dropdown = ({
       </Button>
 
       <div
-        className={`absolute right-0 top-full mt-1 bg-zinc-800 border border-zinc-700 rounded-lg shadow-2xl z-100 transition-all duration-200 origin-top ${
+        className={`absolute right-0 top-full mt-1 bg-zinc-800 border border-zinc-700 rounded-lg shadow-2xl z-100 transition-all ${DROPDOWN_DURATION} origin-top ${
           open
             ? "opacity-100 scale-y-100 pointer-events-auto"
             : "opacity-0 scale-y-0 pointer-events-none"
         } ${panelClassName}`}
       >
-        {children}
+        <DropdownContext.Provider value={close}>
+          {children}
+        </DropdownContext.Provider>
       </div>
     </div>
   );

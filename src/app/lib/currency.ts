@@ -1,19 +1,22 @@
-const CURRENCIES = [
+export const GLOBAL_CURRENCIES = [
   { code: "USD", name: "United States Dollar", symbol: "$", country: "us" },
   { code: "EUR", name: "Euro", symbol: "€", country: "eu" },
-  { code: "COP", name: "Colombian Peso", symbol: "$", country: "co" },
   { code: "GBP", name: "British Pound Sterling", symbol: "£", country: "gb" },
-  { code: "BRL", name: "Brazilian Real", symbol: "R$", country: "br" },
-  { code: "MXN", name: "Mexican Peso", symbol: "$", country: "mx" },
-  { code: "ARS", name: "Argentine Peso", symbol: "$", country: "ar" },
-  { code: "CLP", name: "Chilean Peso", symbol: "$", country: "cl" },
-  { code: "PEN", name: "Peruvian Sol", symbol: "S/", country: "pe" },
   { code: "JPY", name: "Japanese Yen", symbol: "¥", country: "jp" },
   { code: "CAD", name: "Canadian Dollar", symbol: "$", country: "ca" },
   { code: "AUD", name: "Australian Dollar", symbol: "$", country: "au" },
 ] as const;
 
-export { CURRENCIES };
+export const LATAM_CURRENCIES = [
+  { code: "COP", name: "Colombian Peso", symbol: "$", country: "co" },
+  { code: "BRL", name: "Brazilian Real", symbol: "R$", country: "br" },
+  { code: "MXN", name: "Mexican Peso", symbol: "$", country: "mx" },
+  { code: "ARS", name: "Argentine Peso", symbol: "$", country: "ar" },
+  { code: "CLP", name: "Chilean Peso", symbol: "$", country: "cl" },
+  { code: "PEN", name: "Peruvian Sol", symbol: "S/", country: "pe" },
+] as const;
+
+export const CURRENCIES = [...GLOBAL_CURRENCIES, ...LATAM_CURRENCIES] as const;
 
 export const getCurrencySymbol = (code: string): string => {
   return CURRENCIES.find((c) => c.code === code)?.symbol || "$";
