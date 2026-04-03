@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
+import Image from "next/image";
+import { Skeleton } from "./Skeleton";
 
 const API_URL = "/api";
 
@@ -16,9 +18,7 @@ interface FeaturedCarouselProps {
 }
 
 function SkeletonSlide() {
-  return (
-    <div className="shrink-0 w-[400px] aspect-video rounded-lg bg-zinc-800 animate-skeleton" />
-  );
+  return <Skeleton className="shrink-0 w-[260px] md:w-[400px] aspect-video" />;
 }
 
 export function FeaturedCarousel({ onSelect, onRateLimited }: FeaturedCarouselProps) {
@@ -138,12 +138,14 @@ export function FeaturedCarousel({ onSelect, onRateLimited }: FeaturedCarouselPr
           <button
             key={`${game.appId}-${i}`}
             onClick={() => onSelect(game.name)}
-            className="group shrink-0 relative w-[400px] aspect-video rounded-lg overflow-hidden cursor-pointer flex flex-col justify-start"
+            className="group shrink-0 relative w-[260px] md:w-[400px] aspect-video rounded-lg overflow-hidden cursor-pointer flex flex-col justify-start"
           >
-            <img
+            <Image
               src={game.image}
               alt={game.name}
-              className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-all duration-500 ease-out"
+              fill
+              sizes="(max-width: 768px) 260px, 400px"
+              className="object-cover group-hover:scale-110 transition-all duration-500 ease-out"
             />
             <div className="relative p-3">
               <span className="bg-black/70 text-white text-sm font-bold px-2 py-1 rounded leading-snug line-clamp-2 block w-fit">

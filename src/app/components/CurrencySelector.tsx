@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import Image from "next/image";
 
 const CURRENCIES = [
   { code: "USD", name: "United States Dollar", symbol: "$", country: "us" },
@@ -27,7 +28,7 @@ interface CurrencySelectorProps {
 
 function FlagIcon({ country }: { country: string }) {
   return (
-    <img
+    <Image
       src={`https://flagcdn.com/${country}.svg`}
       alt={country}
       width={20}
@@ -106,7 +107,7 @@ function renderCurrencyButton(
       </button>
 
       {hoveredCode === currency.code && (
-        <div className="absolute right-full top-0 mr-2 px-3 py-2 bg-zinc-900 border border-zinc-600 rounded-lg text-xs text-zinc-300 whitespace-nowrap shadow-lg">
+        <div className="hidden md:block absolute right-full top-0 mr-2 px-3 py-2 bg-zinc-900 border border-zinc-600 rounded-lg text-xs text-zinc-300 whitespace-nowrap shadow-lg">
           {available ? currency.name : `${currency.name} (not available)`}
         </div>
       )}
@@ -134,14 +135,17 @@ export function CurrencySelector({ value, onChange, availableRates }: CurrencySe
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-2 h-12 px-3 rounded-lg bg-zinc-800 border border-zinc-700 text-zinc-100 hover:border-zinc-500 transition-colors font-mono text-sm cursor-pointer"
+        className="flex items-center gap-2 h-9 px-3 rounded-lg text-sm font-medium transition-colors cursor-pointer bg-zinc-800 text-zinc-400 hover:text-zinc-200"
       >
         <FlagIcon country={getCountry(value)} />
-        {value} ▾
+        {value}
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d={open ? "M2 8L6 4L10 8" : "M2 4L6 8L10 4"} />
+        </svg>
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full mt-1 bg-zinc-800 border border-zinc-700 rounded-lg shadow-xl z-50 min-w-[360px] py-2 grid grid-cols-2 gap-x-1">
+        <div className="absolute right-0 top-full mt-1 bg-zinc-800 border border-zinc-700 rounded-lg shadow-2xl z-[100] min-w-[360px] py-2 grid grid-cols-2 gap-x-1">
           <div>
             <div className="px-4 py-1 text-[10px] uppercase tracking-wider text-zinc-500 font-semibold">Global</div>
             {CURRENCIES.filter(c => GLOBAL_CURRENCIES.has(c.code)).map((currency) => renderCurrencyButton(currency, value, availableRates, onChange, setOpen, hoveredCode, setHoveredCode))}

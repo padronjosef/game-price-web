@@ -11,13 +11,29 @@ import { getExchangeRates, convertPrice } from "./lib/currency";
 import { FeaturedCarousel } from "./components/FeaturedCarousel";
 import { UpcomingGames } from "./components/UpcomingGames";
 import { BackgroundImage } from "./components/BackgroundImage";
+import { useCrossfade } from "./hooks/useCrossfade";
 import { Toast, ToastContainer } from "./components/Toast";
 import { GameCard, SkeletonCard } from "./components/GameCard";
+import { Collapse } from "./components/Collapse";
+import { Skeleton } from "./components/Skeleton";
+import { ViewToggle } from "./components/ViewToggle";
+import Image from "next/image";
 
 const API_URL = "/api";
 
 type TypeFilter = "all" | "game" | "dlc" | "bundle";
 type ViewMode = "grid" | "list";
+
+const MAIN_STORES = new Set([
+  "Blizzard Shop",
+  "Epic Games Store",
+  "GOG",
+  "Humble Store",
+  "Instant Gaming",
+  "Origin",
+  "Steam",
+  "Uplay",
+]);
 
 interface PriceResult {
   id: string;
@@ -50,9 +66,9 @@ function getStoredViewMode(): ViewMode {
 }
 
 function getStoredStores(): Set<string> {
-  if (typeof window === "undefined") return new Set();
+  if (typeof window === "undefined") return new Set(MAIN_STORES);
   const saved = localStorage.getItem("selected_stores");
-  if (!saved) return new Set();
+  if (!saved) return new Set(MAIN_STORES);
   const arr = JSON.parse(saved);
   return new Set(arr);
 }
@@ -86,81 +102,6 @@ const TYPE_LABELS: Record<TypeFilter, string> = {
   bundle: "Bundle",
 };
 
-function GridIcon() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5">
-      <rect x="1" y="1" width="6" height="6" rx="1" />
-      <rect x="11" y="1" width="6" height="6" rx="1" />
-      <rect x="1" y="11" width="6" height="6" rx="1" />
-      <rect x="11" y="11" width="6" height="6" rx="1" />
-    </svg>
-  );
-}
-
-function ListIcon() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5">
-      <line x1="1" y1="3" x2="17" y2="3" />
-      <line x1="1" y1="9" x2="17" y2="9" />
-      <line x1="1" y1="15" x2="17" y2="15" />
-    </svg>
-  );
-}
-
-function PriceCardList({
-  price,
-  index,
-  displayPrice,
-}: {
-  price: PriceResult;
-  index: number;
-  displayPrice: (usd: number) => string;
-}) {
-  return (
-    <a
-      href={price.productUrl}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="flex items-center justify-between p-4 rounded-lg bg-zinc-900/80 border border-zinc-700/50 hover:border-zinc-600 transition-colors backdrop-blur-sm"
-    >
-      <div className="flex items-center gap-3">
-        <span className="w-6 flex items-center justify-center">
-          <StoreIcon storeName={price.store?.name || price.storeName || ""} />
-        </span>
-        <div className="flex flex-col">
-          <div className="flex items-center gap-2">
-            {price.gameType === "dlc" && (
-              <span className="text-xs px-1.5 py-0.5 rounded bg-orange-900/50 text-orange-300">
-                DLC
-              </span>
-            )}
-            {price.gameType === "bundle" && (
-              <span className="text-xs px-1.5 py-0.5 rounded bg-purple-900/50 text-purple-300">
-                Bundle
-              </span>
-            )}
-            <span className="font-medium">{price.gameName}</span>
-          </div>
-          <span className="text-xs text-zinc-500">{price.store?.name || price.storeName}</span>
-        </div>
-      </div>
-      <div className="flex items-center gap-3">
-        {price.originalPrice && price.originalPrice > price.price && (
-          <span className="text-sm text-zinc-500 line-through">
-            {displayPrice(Number(price.originalPrice))}
-          </span>
-        )}
-        <span
-          className={`text-lg font-bold ${
-            index === 0 ? "text-green-400" : "text-zinc-100"
-          }`}
-        >
-          {displayPrice(Number(price.price))}
-        </span>
-      </div>
-    </a>
-  );
-}
 
 const STORE_ICONS: Record<string, { file: string; ext: "png" | "svg" }> = {
   "Steam": { file: "steam", ext: "png" },
@@ -185,41 +126,31 @@ const STORE_ICONS: Record<string, { file: string; ext: "png" | "svg" }> = {
   "Instant Gaming": { file: "instantgaming", ext: "png" },
 };
 
-const MAIN_STORES = new Set([
-  "Blizzard Shop",
-  "Epic Games Store",
-  "GOG",
-  "Humble Store",
-  "Instant Gaming",
-  "Origin",
-  "Steam",
-  "Uplay",
-]);
-
 function StoreIcon({ storeName }: { storeName: string }) {
   const icon = STORE_ICONS[storeName];
   if (!icon) return null;
   return (
-    <img
+    <Image
       src={`/store-icons/${icon.file}.${icon.ext}`}
       alt={storeName}
       title={storeName}
       width={24}
       height={24}
       className="inline-block rounded-sm"
-      style={{ width: 24, height: 24 }}
     />
   );
 }
 
-function PriceCardGrid({
+function PriceCard({
   price,
   index,
   displayPrice,
+  variant = "grid",
 }: {
   price: PriceResult;
   index: number;
   displayPrice: (usd: number) => string;
+  variant?: "grid" | "list";
 }) {
   const badges = [];
   if (price.gameType === "dlc") badges.push({ label: "DLC", className: "bg-orange-500" });
@@ -231,16 +162,17 @@ function PriceCardGrid({
       image={price.imageUrl}
       name={price.gameName}
       badges={badges}
+      variant={variant}
       storeIcon={<StoreIcon storeName={price.store?.name || price.storeName || ""} />}
       bottomRight={
-        <div className="flex flex-col items-end bg-black/70 rounded px-2 py-1">
+        <div className={`flex flex-col items-end ${variant === "grid" ? "bg-black/70 rounded px-2 py-1" : ""}`}>
           {price.originalPrice && price.originalPrice > price.price && (
             <span className="text-xs text-zinc-200 line-through">
               {displayPrice(Number(price.originalPrice))}
             </span>
           )}
           <span
-            className={`text-lg font-bold ${
+            className={`font-bold ${variant === "list" ? "text-base" : "text-lg"} ${
               index === 0 ? "text-green-400" : "text-white"
             }`}
           >
@@ -258,9 +190,11 @@ export default function Home() {
   const [typeFilter, setTypeFilter] = useState<TypeFilter>("all");
   const [gameFilter, setGameFilter] = useState<string>("all");
   const [viewMode, setViewModeState] = useState<ViewMode>("grid");
+  const [viewChangeCount, setViewChangeCount] = useState(0);
   const [results, setResults] = useState<SearchResponse | null>(null);
   const [homeBg, setHomeBg] = useState<string | null>(HOME_BACKGROUNDS[0]);
   const [rates, setRates] = useState<Record<string, number>>({ USD: 1 });
+  const [initializing, setInitializing] = useState(true);
   const [loading, setLoading] = useState(false);
   const [scraping, setScraping] = useState(false);
   const [pendingScrapers, setPendingScrapers] = useState<string[]>([]);
@@ -275,13 +209,22 @@ export default function Home() {
   const [headerHeight, setHeaderHeight] = useState(0);
   const [selectedStores, setSelectedStoresState] = useState<Set<string>>(new Set());
   const [showStoreDropdown, setShowStoreDropdown] = useState(false);
+  const [showMobileSummary, setShowMobileSummary] = useState({ dismissed: false, hiding: false });
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [inputFocused, setInputFocused] = useState(false);
+  const [gameNamesExpanded, setGameNamesExpanded] = useState(false);
+  const { layers: bgLayers, setImage: setBgImage } = useCrossfade();
+  const gameNamesRef = useRef<HTMLDivElement>(null);
+  const [gameNamesOverflows, setGameNamesOverflows] = useState(false);
   const [cheapestOnly, setCheapestOnlyState] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
   const storeDropdownRef = useRef<HTMLDivElement>(null);
+  const storeDropdownMobileRef = useRef<HTMLDivElement>(null);
 
   function setViewMode(mode: ViewMode) {
     setViewModeState(mode);
+    setViewChangeCount((c) => c + 1);
     localStorage.setItem("view_mode", mode);
   }
 
@@ -315,11 +258,8 @@ export default function Home() {
     setScraping(false);
     setPendingScrapers([]);
     setError("");
-
-    // Save to recent searches
-    const updated = [term, ...recentSearches.filter((s) => s.toLowerCase() !== term.toLowerCase())].slice(0, 5);
-    setRecentSearches(updated);
-    localStorage.setItem("recent_searches", JSON.stringify(updated));
+    setShowMobileSummary({ dismissed: false, hiding: false });
+    setGameNamesExpanded(false);
 
     // Load exchange rates
     getExchangeRates().then(setRates).catch(() => {});
@@ -341,6 +281,12 @@ export default function Home() {
         setResults({ game: data.game, prices: data.prices });
         setLastUpdated(new Date());
         setLoading(false);
+        if (data.prices && data.prices.length > 0) {
+          const existing: string[] = JSON.parse(localStorage.getItem("recent_searches") || "[]");
+          const updated = [term, ...existing.filter((s: string) => s.toLowerCase() !== term.toLowerCase())].slice(0, 6);
+          setRecentSearches(updated);
+          localStorage.setItem("recent_searches", JSON.stringify(updated));
+        }
       }
 
       if (data.type === "slow") {
@@ -391,10 +337,12 @@ export default function Home() {
     // Search from URL query param
     const urlQ = new URLSearchParams(window.location.search).get("q");
     if (urlQ && urlQ.trim().length >= 2) {
-      requestAnimationFrame(() => {
-        setQuery(urlQ.trim());
-        doSearch(urlQ.trim());
-      });
+      setQuery(urlQ.trim());
+      setLoading(true);
+      setInitializing(false);
+      doSearch(urlQ.trim());
+    } else {
+      setInitializing(false);
     }
 
     const ro = new ResizeObserver(([entry]) => {
@@ -408,7 +356,10 @@ export default function Home() {
   useEffect(() => {
     if (!showStoreDropdown) return;
     function handleClickOutside(e: MouseEvent) {
-      if (storeDropdownRef.current && !storeDropdownRef.current.contains(e.target as Node)) {
+      const target = e.target as Node;
+      const inDesktop = storeDropdownRef.current?.contains(target);
+      const inMobile = storeDropdownMobileRef.current?.contains(target);
+      if (!inDesktop && !inMobile) {
         setShowStoreDropdown(false);
       }
     }
@@ -423,7 +374,14 @@ export default function Home() {
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault();
+    inputRef.current?.blur();
     doSearch(query.trim());
+  }
+
+  function removeRecentSearch(term: string) {
+    const updated = recentSearches.filter((s) => s !== term);
+    setRecentSearches(updated);
+    localStorage.setItem("recent_searches", JSON.stringify(updated));
   }
 
   const symbol = getCurrencySymbol(currency);
@@ -519,10 +477,20 @@ export default function Home() {
         .map((g) => g.name)
     : [];
 
+  useEffect(() => {
+    if (!gameNamesRef.current) return;
+    setGameNamesOverflows(gameNamesRef.current.scrollHeight > 40);
+  }, [gameNames]);
+
   // Hero background: use the high-res background_raw from Steam
   const heroImage = results?.prices.find(
     (p) => p.backgroundUrl && (gameFilter === "all" ? p.gameType === "game" : p.gameName === gameFilter)
   )?.backgroundUrl;
+
+  useEffect(() => {
+    const img = heroImage || homeBg;
+    if (img) setBgImage(img);
+  }, [heroImage, homeBg, setBgImage]);
 
   const filteredPrices = results?.prices.filter((p) => {
     const matchesType = typeFilter === "all" || p.gameType === typeFilter;
@@ -563,20 +531,55 @@ export default function Home() {
   }
 
   function renderPrices(prices: PriceResult[]) {
-    if (viewMode === "list") {
-      return (
-        <div className="space-y-3">
-          {prices.map((price, i) => (
-            <PriceCardList key={price.id || `${price.store?.name}-${price.gameName}-${price.price}`} price={price} index={i} displayPrice={displayPrice} />
-          ))}
-        </div>
-      );
-    }
     return (
-      <div className="grid grid-cols-3 gap-6">
+      <div key={viewChangeCount} className={`animate-fade-in-up ${viewMode === "list" ? "space-y-3" : "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6"}`}>
         {prices.map((price, i) => (
-          <PriceCardGrid key={price.id || `${price.store?.name}-${price.gameName}-${price.price}`} price={price} index={i} displayPrice={displayPrice} />
+          <PriceCard key={price.id || `${price.store?.name}-${price.gameName}-${price.price}`} price={price} index={i} displayPrice={displayPrice} variant={viewMode} />
         ))}
+      </div>
+    );
+  }
+
+  if (initializing) {
+    return (
+      <div className="flex flex-col min-h-screen bg-zinc-950">
+        <div className="px-4 pt-4 pb-6 flex flex-col items-center">
+          {/* Skeleton header */}
+          <div className="w-full max-w-5xl text-center mb-4 bg-zinc-800/50 rounded-lg px-5 py-3 flex flex-col items-center">
+            <Skeleton className="h-8 w-64 mb-2" />
+            <Skeleton className="h-4 w-48" />
+          </div>
+          {/* Skeleton filters */}
+          <div className="flex gap-2 w-full max-w-5xl mb-4">
+            <Skeleton className="h-9 w-16" />
+            <Skeleton className="h-9 w-24" />
+            <Skeleton className="h-9 w-14" />
+            <Skeleton className="h-9 w-18" />
+            <Skeleton className="ml-auto h-9 w-9" />
+            <Skeleton className="h-9 w-20" />
+            <Skeleton className="h-9 w-24" />
+          </div>
+          {/* Skeleton search */}
+          <Skeleton className="w-full max-w-5xl h-12" />
+        </div>
+        {/* Skeleton recent searches */}
+        <div className="w-full max-w-5xl mx-auto px-4 mb-6">
+          <Skeleton className="h-7 w-44 mb-3" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+            {[...Array(6)].map((_, i) => (
+              <Skeleton key={i} className="h-11" />
+            ))}
+          </div>
+        </div>
+        {/* Skeleton carousel */}
+        <div className="w-full max-w-5xl mx-auto px-4 mb-6">
+          <Skeleton className="h-7 w-40 mb-3" />
+          <div className="flex gap-3">
+            {[...Array(4)].map((_, i) => (
+              <Skeleton key={i} className="shrink-0 w-[260px] md:w-[400px] aspect-video" />
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
@@ -588,35 +591,30 @@ export default function Home() {
         className="fixed left-0 right-0 bottom-0 z-0 bg-zinc-950"
         style={{ top: headerHeight }}
       >
-        <BackgroundImage image={heroImage || homeBg} opacity={0.8} />
+        <BackgroundImage crossfade={bgLayers} opacity={0.5} />
       </div>
 
+
+      {/* Mobile menu backdrop */}
+      <div
+        onClick={() => setMobileMenuOpen(false)}
+        className={`md:hidden fixed inset-0 bg-black/50 z-[499] transition-opacity duration-200 ${
+          mobileMenuOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+        }`}
+      />
 
       {/* Sticky header */}
       <div
         ref={headerRef}
-        className="sticky top-0 z-20 px-4 pt-4 pb-6 flex flex-col items-center bg-zinc-950"
+        className="sticky top-0 z-[500] pt-4 pb-4 flex justify-center bg-zinc-950"
       >
-        <BackgroundImage image={heroImage || homeBg} opacity={0.8} />
+        <BackgroundImage crossfade={bgLayers} opacity={0.5} />
+        <div className="w-full max-w-5xl px-4 flex flex-col items-center">
 
-        <header className="w-full max-w-5xl text-center mb-4 relative flex flex-col items-center bg-black/70 rounded-lg px-5 py-3">
-          <div className="absolute top-2 right-2 flex gap-0.5 bg-zinc-800 rounded p-0.5 z-10">
-            <button
-              onClick={() => setViewMode("grid")}
-              className={`p-2 rounded transition-colors cursor-pointer ${
-                viewMode === "grid" ? "bg-zinc-600 text-white" : "text-zinc-400 hover:text-zinc-200"
-              }`}
-            >
-              <GridIcon />
-            </button>
-            <button
-              onClick={() => setViewMode("list")}
-              className={`p-2 rounded transition-colors cursor-pointer ${
-                viewMode === "list" ? "bg-zinc-600 text-white" : "text-zinc-400 hover:text-zinc-200"
-              }`}
-            >
-              <ListIcon />
-            </button>
+        {/* Desktop header */}
+        <header className="hidden md:flex w-full text-center mb-4 relative flex-col items-center bg-black/70 rounded-lg px-5 py-3">
+          <div className="absolute top-2 right-2 z-10">
+            <ViewToggle value={viewMode} onChange={setViewMode} />
           </div>
           <h1 className="text-3xl font-bold mb-1">Game Price Finder</h1>
           <p className="text-zinc-200 text-sm">
@@ -624,11 +622,159 @@ export default function Home() {
           </p>
         </header>
 
-        <div className="flex gap-2 w-full max-w-5xl mb-3 relative items-center">
+        {/* Mobile header bar */}
+        <div className="md:hidden w-full mb-3 relative z-[400] flex items-center bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-2.5 cursor-pointer" onClick={() => setMobileMenuOpen((v) => !v)}>
+          <div
+            className={`w-[34px] h-[34px] flex items-center justify-center rounded-lg transition-colors ${
+              mobileMenuOpen
+                ? "text-white bg-zinc-600"
+                : "text-zinc-300 bg-zinc-700"
+            }`}
+          >
+            <div className="w-[18px] h-[14px] flex flex-col justify-between relative">
+              <span className={`block h-[2px] w-full bg-current rounded-full transition-all duration-300 origin-center ${
+                mobileMenuOpen ? "translate-y-[6px] rotate-45" : ""
+              }`} />
+              <span className={`block h-[2px] w-full bg-current rounded-full transition-all duration-300 ${
+                mobileMenuOpen ? "opacity-0 scale-x-0" : ""
+              }`} />
+              <span className={`block h-[2px] w-full bg-current rounded-full transition-all duration-300 origin-center ${
+                mobileMenuOpen ? "-translate-y-[6px] -rotate-45" : ""
+              }`} />
+            </div>
+          </div>
+          <h1 className="text-lg font-bold text-white flex-1 text-center">Game Price Finder</h1>
+          {displayPrices && displayPrices.length > 0 && (
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); setCheapestOnly(!cheapestOnly); }}
+              title={cheapestOnly ? "Showing cheapest only" : "Showing all prices"}
+              className={`w-[34px] h-[34px] flex items-center justify-center rounded-lg cursor-pointer transition-colors ${
+                cheapestOnly
+                  ? "text-green-400 bg-green-900"
+                  : "text-zinc-300 bg-zinc-700 hover:text-white hover:bg-zinc-600"
+              }`}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="12" y1="1" x2="12" y2="23" />
+                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+              </svg>
+            </button>
+          )}
+
+          {/* Mobile burger menu panel — overlay */}
+          <Collapse open={mobileMenuOpen} maxHeight="70vh" duration={200} className="absolute left-0 right-0 top-full mt-1 z-[400]">
+            <div className="bg-zinc-800 border border-zinc-600/50 rounded-lg px-4 py-4 flex flex-col gap-4 shadow-2xl max-h-[70vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+              {/* Cheapest only */}
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-zinc-400">Cheapest only</span>
+                <button
+                  type="button"
+                  onClick={() => setCheapestOnly(!cheapestOnly)}
+                  className={`w-8 h-8 flex items-center justify-center rounded-lg cursor-pointer transition-colors ${
+                    cheapestOnly
+                      ? "text-green-400 bg-green-900"
+                      : "text-zinc-300 bg-zinc-700 hover:text-white hover:bg-zinc-600"
+                  }`}
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="12" y1="1" x2="12" y2="23" />
+                    <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                  </svg>
+                </button>
+              </div>
+
+              {/* View mode */}
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-zinc-400">View</span>
+                <ViewToggle value={viewMode} onChange={(m) => { setViewMode(m); setMobileMenuOpen(false); }} />
+              </div>
+
+              {/* Currency */}
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-zinc-400">Currency</span>
+                <CurrencySelector value={currency} onChange={(c) => { handleCurrencyChange(c); setMobileMenuOpen(false); }} availableRates={rates} />
+              </div>
+
+              {/* Stores */}
+              <div ref={storeDropdownMobileRef}>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm text-zinc-400">Stores</span>
+                  <button
+                    type="button"
+                    onClick={toggleAllStores}
+                    className={`text-xs px-2 py-1 rounded cursor-pointer ${
+                      allStoresSelected ? "text-zinc-400 hover:text-zinc-200" : "text-blue-400 hover:text-blue-300"
+                    }`}
+                  >
+                    {allStoresSelected ? "Deselect all" : "Select all"}
+                  </button>
+                </div>
+                {[
+                  { label: "Main stores", stores: allStoreNames.filter((s) => MAIN_STORES.has(s)) },
+                  { label: "Other stores", stores: allStoreNames.filter((s) => !MAIN_STORES.has(s)) },
+                ].map((group) => {
+                  const currentSet = selectedStores.size === 0 ? new Set(allStoreNames) : selectedStores.has("__none__") ? new Set<string>() : selectedStores;
+                  const allGroupSelected = group.stores.every((s) => currentSet.has(s));
+                  return (
+                    <div key={group.label} className="mb-5">
+                      <div
+                        className="flex items-center gap-2 py-1 mb-2 cursor-pointer"
+                        onClick={() => toggleGroup(group.stores)}
+                      >
+                        <span className={`w-3.5 h-3.5 rounded border flex items-center justify-center ${
+                          allGroupSelected ? "bg-blue-600 border-blue-600" : "border-zinc-500"
+                        }`}>
+                          {allGroupSelected && (
+                            <svg width="8" height="8" viewBox="0 0 10 10" fill="none" stroke="white" strokeWidth="2">
+                              <path d="M2 5L4 7L8 3" />
+                            </svg>
+                          )}
+                        </span>
+                        <span className="text-[11px] font-semibold text-zinc-500 uppercase tracking-widest">{group.label}</span>
+                      </div>
+                      <div className="flex flex-col">
+                        {group.stores.map((store) => {
+                          const hasResults = storesWithResults.has(store);
+                          const unavailable = results && !hasResults;
+                          const isSelected = allStoresSelected || (selectedStores.has(store) && !selectedStores.has("__none__"));
+                          return (
+                            <div
+                              key={store}
+                              className={`flex items-center gap-3 px-2 py-1.5 text-sm rounded cursor-pointer hover:bg-zinc-800 ${
+                                unavailable ? "brightness-50" : ""
+                              }`}
+                              onClick={() => toggleStore(store)}
+                            >
+                              <span className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 ${
+                                isSelected ? "bg-blue-600 border-blue-600" : "border-zinc-500"
+                              }`}>
+                                {isSelected && (
+                                  <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="white" strokeWidth="2">
+                                    <path d="M2 5L4 7L8 3" />
+                                  </svg>
+                                )}
+                              </span>
+                              <StoreIcon storeName={store} />
+                              <span className={`truncate ${unavailable ? "text-zinc-500" : "text-zinc-300"}`}>{store}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </Collapse>
+        </div>
+
+        {/* === Desktop layout (md+): original 2-row layout === */}
+        <div className="hidden md:flex gap-2 w-full mb-4 relative items-center">
           {(Object.keys(TYPE_LABELS) as TypeFilter[]).map((type) => (
             <button
               key={type}
-              onClick={() => { setTypeFilter(type); setVisibleCount(ITEMS_PER_PAGE); }}
+              onClick={() => { setTypeFilter(type); setVisibleCount(ITEMS_PER_PAGE); window.scrollTo({ top: 0, behavior: "smooth" }); }}
               className={`px-3 h-9 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
                 typeFilter === type
                   ? "bg-blue-600 text-white"
@@ -642,14 +788,20 @@ export default function Home() {
           <button
             type="button"
             onClick={() => setCheapestOnly(!cheapestOnly)}
-            className={`ml-auto px-3 h-9 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
+            title={cheapestOnly ? "Showing cheapest only" : "Show cheapest only"}
+            className={`ml-auto w-9 h-9 flex items-center justify-center rounded-lg transition-colors cursor-pointer ${
               cheapestOnly
-                ? "bg-green-600 text-white"
+                ? "text-green-400 bg-green-900"
                 : "bg-zinc-800 text-zinc-400 hover:text-zinc-200"
             }`}
           >
-            Cheapest only
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="12" y1="1" x2="12" y2="23" />
+              <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+            </svg>
           </button>
+
+          <CurrencySelector value={currency} onChange={handleCurrencyChange} availableRates={rates} />
 
           <div className="relative" ref={storeDropdownRef}>
             <button
@@ -752,18 +904,19 @@ export default function Home() {
           </div>
         </div>
 
-        <form onSubmit={handleSearch} className="w-full max-w-5xl mb-3 relative">
-          <div className="flex gap-2 items-stretch">
-            <div className="relative flex-1">
+        <form onSubmit={handleSearch} className="hidden md:block w-full mb-5 relative">
+          <div className="flex items-stretch">
+            <div className="relative flex-1 transition-all duration-300">
               <input
                 ref={inputRef}
                 type="text"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                onFocus={() => recentSearches.length > 0 && setShowRecent(true)}
-                onBlur={() => setTimeout(() => setShowRecent(false), 200)}
-                placeholder="Search for a game... (e.g. Elden Ring)"
-                className="w-full h-12 px-4 pr-10 rounded-lg bg-zinc-800 border border-zinc-700 text-zinc-100 placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                onFocus={() => { setInputFocused(true); recentSearches.length > 0 && setShowRecent(true); }}
+                onBlur={() => { setInputFocused(false); setTimeout(() => setShowRecent(false), 200); }}
+                disabled={loading}
+                placeholder={loading ? "Searching..." : "Search for a game... (e.g. Elden Ring)"}
+                className={`w-full h-12 px-4 pr-10 rounded-lg bg-zinc-800 border border-zinc-700 text-zinc-100 placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 ${loading ? "animate-pulse opacity-60" : ""}`}
               />
               {query && (
                 <button
@@ -808,59 +961,247 @@ export default function Home() {
                 </div>
               )}
             </div>
-            <CurrencySelector value={currency} onChange={handleCurrencyChange} availableRates={rates} />
             <button
               type="submit"
               disabled={loading || query.trim().length < 2}
-              className="h-12 min-w-[160px] px-6 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 disabled:brightness-50 disabled:cursor-not-allowed cursor-pointer transition-colors"
+              className={`h-12 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 disabled:brightness-50 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center transition-all duration-300 overflow-hidden ${
+                inputFocused && query.trim().length >= 2 && !loading ? "w-12 ml-2 opacity-100" : "w-0 ml-0 opacity-0"
+              }`}
             >
-              {loading ? "Searching..." : "Search"}
+              {loading ? (
+                <div className="w-[18px] h-[18px] border-2 border-white/30 border-t-white rounded-full animate-spin shrink-0" />
+              ) : (
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                  <polyline points="12 5 19 12 12 19" />
+                </svg>
+              )}
             </button>
           </div>
         </form>
 
-        {gameNames.length > 1 && (
-          <div className="flex flex-wrap gap-2 w-full max-w-5xl relative">
+        {/* === Mobile/Tablet layout (<md): 4 rows === */}
+        {/* Row 1: Type filters */}
+        <div className="flex md:hidden gap-2 w-full mb-3 relative">
+          {(Object.keys(TYPE_LABELS) as TypeFilter[]).map((type) => (
             <button
-              onClick={() => { setGameFilter("all"); setVisibleCount(ITEMS_PER_PAGE); }}
-              className={`px-3 h-8 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
-                gameFilter === "all"
-                  ? "bg-zinc-100 text-zinc-900"
+              key={type}
+              onClick={() => { setTypeFilter(type); setVisibleCount(ITEMS_PER_PAGE); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+              className={`px-3 h-9 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
+                typeFilter === type
+                  ? "bg-blue-600 text-white"
                   : "bg-zinc-800 text-zinc-400 hover:text-zinc-200"
               }`}
             >
-              All Games
+              {TYPE_LABELS[type]}
             </button>
-            {gameNames.map((name) => (
-              <button
-                key={name}
-                onClick={() => { setGameFilter(name); setVisibleCount(ITEMS_PER_PAGE); }}
-                className={`px-3 h-8 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
-                  gameFilter === name
-                    ? "bg-zinc-100 text-zinc-900"
-                    : "bg-zinc-800 text-zinc-400 hover:text-zinc-200"
-                }`}
-              >
-                {name}
-              </button>
-            ))}
+          ))}
+        </div>
+
+        {/* Row 2: Search + Submit */}
+        <form onSubmit={handleSearch} className="md:hidden w-full mb-4 relative">
+          <div className="flex items-stretch">
+            <div className="relative flex-1 min-w-0 transition-all duration-300">
+              <input
+                type="text"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                onFocus={() => { setInputFocused(true); recentSearches.length > 0 && setShowRecent(true); }}
+                onBlur={() => { setInputFocused(false); setTimeout(() => setShowRecent(false), 200); }}
+                disabled={loading}
+                placeholder={loading ? "Searching..." : "Search for a game..."}
+                className={`w-full h-11 px-3 pr-9 rounded-lg bg-zinc-800 border border-zinc-700 text-zinc-100 placeholder-zinc-500 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${loading ? "animate-pulse opacity-60" : ""}`}
+              />
+              {query && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setQuery("");
+                    setResults(null);
+                    setError("");
+                    setLastUpdated(null);
+                    const url = new URL(window.location.href);
+                    url.searchParams.delete("q");
+                    window.history.pushState({}, "", url.toString());
+                  }}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-200 transition-colors cursor-pointer"
+                >
+                  <svg width="16" height="16" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M4 4L14 14M14 4L4 14" />
+                  </svg>
+                </button>
+              )}
+              {showRecent && recentSearches.length > 0 && (
+                <div
+                  className="absolute left-0 right-0 top-full mt-1 bg-zinc-800 border border-zinc-700 rounded-lg shadow-2xl z-[100] py-1"
+                  onMouseDown={(e) => e.preventDefault()}
+                >
+                  <p className="px-3 py-1 text-xs text-zinc-500">Recent searches</p>
+                  {recentSearches.map((term) => (
+                    <button
+                      key={term}
+                      type="button"
+                      onClick={() => {
+                        setQuery(term);
+                        setShowRecent(false);
+                        doSearch(term);
+                      }}
+                      className="w-full text-left px-3 py-2 text-sm text-zinc-300 hover:bg-zinc-700 cursor-pointer"
+                    >
+                      {term}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            <button
+              type="submit"
+              disabled={loading || query.trim().length < 2}
+              className={`h-11 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:brightness-50 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center transition-all duration-300 overflow-hidden ${
+                inputFocused && query.trim().length >= 2 && !loading ? "w-11 ml-2 opacity-100" : "w-0 ml-0 opacity-0"
+              }`}
+            >
+              {loading ? (
+                <div className="w-[18px] h-[18px] border-2 border-white/30 border-t-white rounded-full animate-spin shrink-0" />
+              ) : (
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                  <polyline points="12 5 19 12 12 19" />
+                </svg>
+              )}
+            </button>
           </div>
+        </form>
+
+        {/* Row 4: Game name filters (shared between desktop and mobile) */}
+        {gameNames.length > 1 && (
+          <>
+          {/* Game names backdrop */}
+          <div
+            onClick={() => setGameNamesExpanded(false)}
+            className={`md:hidden fixed inset-0 bg-black/40 z-[100] transition-opacity duration-200 ${
+              gameNamesExpanded ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+            }`}
+          />
+          <div className="w-full relative">
+            {/* Collapsed row — always visible */}
+            <div className="overflow-hidden h-8">
+              <div ref={gameNamesRef} className="flex flex-wrap gap-2 pr-10">
+                <button
+                  onClick={() => { setGameFilter("all"); setVisibleCount(ITEMS_PER_PAGE); setGameNamesExpanded(false); }}
+                  className={`px-3 h-8 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
+                    gameFilter === "all"
+                      ? "bg-zinc-100 text-zinc-900"
+                      : "bg-zinc-800 text-zinc-400 hover:text-zinc-200"
+                  }`}
+                >
+                  All Games
+                </button>
+                {gameNames.map((name) => (
+                  <button
+                    key={name}
+                    onClick={() => { setGameFilter(name); setVisibleCount(ITEMS_PER_PAGE); setGameNamesExpanded(false); }}
+                    className={`px-3 h-8 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
+                      gameFilter === name
+                        ? "bg-zinc-100 text-zinc-900"
+                        : "bg-zinc-800 text-zinc-400 hover:text-zinc-200"
+                    }`}
+                  >
+                    {name}
+                  </button>
+                ))}
+              </div>
+            </div>
+            {/* Expanded overlay — mobile: absolute, desktop: pushes content */}
+            <Collapse open={gameNamesExpanded} className="md:relative absolute left-0 right-0 top-0 z-[101] bg-zinc-900 md:bg-transparent rounded-lg md:rounded-none shadow-2xl md:shadow-none">
+              <div className="flex flex-wrap gap-2 p-2 md:p-0 md:pt-2 pr-10">
+                <button
+                  onClick={() => { setGameFilter("all"); setVisibleCount(ITEMS_PER_PAGE); setGameNamesExpanded(false); }}
+                  className={`px-3 h-8 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
+                    gameFilter === "all"
+                      ? "bg-zinc-100 text-zinc-900"
+                      : "bg-zinc-800 text-zinc-400 hover:text-zinc-200"
+                  }`}
+                >
+                  All Games
+                </button>
+                {gameNames.map((name) => (
+                  <button
+                    key={name}
+                    onClick={() => { setGameFilter(name); setVisibleCount(ITEMS_PER_PAGE); setGameNamesExpanded(false); }}
+                    className={`px-3 h-8 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
+                      gameFilter === name
+                        ? "bg-zinc-100 text-zinc-900"
+                        : "bg-zinc-800 text-zinc-400 hover:text-zinc-200"
+                    }`}
+                  >
+                    {name}
+                  </button>
+                ))}
+              </div>
+            </Collapse>
+            {gameNamesOverflows && (
+              <button
+                type="button"
+                onClick={() => setGameNamesExpanded(!gameNamesExpanded)}
+                className="absolute right-0 top-0 h-8 w-8 flex items-center justify-center bg-zinc-800 rounded-lg text-zinc-400 hover:text-zinc-200 cursor-pointer transition-colors z-[102]"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={`transition-transform duration-300 ${gameNamesExpanded ? "rotate-180" : ""}`}>
+                  <polyline points="6 9 12 15 18 9" />
+                </svg>
+              </button>
+            )}
+          </div>
+          </>
         )}
+        </div>
       </div>
 
-      {/* Featured carousel & upcoming - visible until results appear */}
-      {!results && !loading && (
-        <>
+      {/* Recent searches + Featured carousel & upcoming - visible until results appear */}
+      {!initializing && !results && !loading && (
+        <div className="animate-fade-in-up">
+          {recentSearches.length > 0 && (
+            <div className="w-full max-w-5xl mx-auto px-4 mb-6 relative z-10">
+              <h2 className="text-lg font-bold text-white mb-3">
+                <span className="bg-black/70 px-2 py-1 rounded">Recent Searches</span>
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+                {recentSearches.map((term) => (
+                  <div
+                    key={term}
+                    className="flex items-center bg-zinc-800 border border-zinc-700/50 rounded-lg overflow-hidden group hover:border-zinc-600 transition-colors"
+                  >
+                    <button
+                      type="button"
+                      onClick={() => { setQuery(term); doSearch(term); }}
+                      className="flex-1 text-left px-4 py-3 text-sm text-zinc-300 hover:text-white transition-colors cursor-pointer truncate"
+                    >
+                      {term}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => removeRecentSearch(term)}
+                      className="px-3 py-3 text-zinc-600 hover:text-red-400 cursor-pointer transition-colors"
+                    >
+                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M3 3l8 8M11 3l-8 8" />
+                      </svg>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
           <div className="w-full relative z-10">
             <FeaturedCarousel onSelect={(name) => { setQuery(name); doSearch(name); }} onRateLimited={() => setRateLimited(true)} />
           </div>
-          <UpcomingGames onRateLimited={() => setRateLimited(true)} />
-        </>
+          <UpcomingGames onRateLimited={() => setRateLimited(true)} viewMode={viewMode} viewKey={viewChangeCount} />
+        </div>
       )}
 
       {/* Results */}
-      <div className="flex-1 px-4 pb-4 relative z-10">
-        <div className="max-w-5xl mx-auto">
+      <div className="flex-1 pb-4 relative z-10">
+        <div className="max-w-5xl mx-auto px-4">
           {loading && (
             <div className="flex flex-col items-center justify-center py-16">
               <div className="w-16 h-16 border-[5px] border-zinc-700 border-t-blue-500 rounded-full animate-spin" />
@@ -890,7 +1231,7 @@ export default function Home() {
                       rendered += items.length;
                       return (
                         <div key={group.type}>
-                          <h3 className="text-base font-semibold text-white uppercase tracking-wider mb-2">
+                          <h3 className="text-base font-semibold text-white tracking-wider mb-2">
                             <span className="bg-black/70 px-2 py-1 rounded">{group.label}</span>
                           </h3>
                           {renderPrices(items)}
@@ -901,9 +1242,9 @@ export default function Home() {
                 </div>
               )}
               {displayPrices && displayPrices.length > visibleCount && (
-                <div ref={sentinelRef} className="flex items-center justify-center py-8 gap-3">
-                  <div className="w-5 h-5 border-2 border-zinc-700 border-t-blue-500 rounded-full animate-spin" />
-                  <span className="text-sm text-zinc-500">Loading more...</span>
+                <div ref={sentinelRef} className="flex items-center justify-center py-8 gap-3 bg-zinc-900 rounded-lg mx-auto max-w-xs px-6 py-4">
+                  <div className="w-6 h-6 border-2 border-zinc-700 border-t-blue-500 rounded-full animate-spin" />
+                  <span className="text-base text-zinc-300 font-medium">Loading more...</span>
                 </div>
               )}
             </>
@@ -911,11 +1252,44 @@ export default function Home() {
         </div>
       </div>
 
-      {!loading && displayPrices && displayPrices.length > 0 && (
-        <div className="fixed bottom-6 left-6 z-50 bg-zinc-800 border border-zinc-700/50 rounded-lg px-4 py-2 shadow-2xl">
-          <span className="text-sm text-zinc-300">
-            <span className="font-bold text-white">{displayPrices.length}</span> results found
-          </span>
+      {/* Status bar — anchored to max-w-5xl wrapper */}
+      {!loading && displayPrices && displayPrices.length > 0 && !showMobileSummary.dismissed && (
+        <div className={`fixed bottom-6 left-0 right-0 z-[200] flex justify-center pointer-events-none transition-all duration-300 ${
+          showMobileSummary.hiding ? "opacity-0 translate-y-4" : "opacity-100 translate-y-0"
+        }`}>
+          <div className="w-full max-w-5xl px-4 md:px-0 flex justify-end pointer-events-none">
+            <div className={`pointer-events-auto flex items-center justify-between md:justify-start gap-2 bg-zinc-800 border rounded-lg px-4 py-2.5 shadow-2xl text-sm text-zinc-300 transition-colors duration-300 w-full md:w-auto ${
+              !scraping && lastUpdated ? "border-green-700" : "border-zinc-700"
+            }`}>
+              <span><span className="font-bold text-white">{displayPrices.length}</span> Results</span>
+              <div className="flex items-center gap-2">
+                {scraping && (
+                  <>
+                    <span className="hidden md:inline text-zinc-600">·</span>
+                    <div className="w-3.5 h-3.5 border-2 border-zinc-600 border-t-blue-500 rounded-full animate-spin" />
+                    <span className="text-blue-400">Scraping More Stores...</span>
+                  </>
+                )}
+                {!scraping && lastUpdated && results && (
+                  <>
+                    <span className="hidden md:inline text-zinc-600">·</span>
+                    <span className="text-zinc-400">Updated {lastUpdated.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}</span>
+                  </>
+                )}
+                <button
+                  onClick={() => {
+                    setShowMobileSummary({ dismissed: false, hiding: true });
+                    setTimeout(() => setShowMobileSummary({ dismissed: true, hiding: true }), 300);
+                  }}
+                  className="text-zinc-500 hover:text-zinc-300 cursor-pointer ml-1"
+                >
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M3 3l8 8M11 3l-8 8" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
@@ -923,15 +1297,8 @@ export default function Home() {
         {error && (
           <Toast variant="error" message={error} onClose={() => setError("")} />
         )}
-        {scraping && <Toast variant="info" message="Scraping more stores..." />}
         {rateLimited && (
           <Toast variant="warning" message="Steam rate limit reached. Some data may be unavailable." onClose={() => setRateLimited(false)} />
-        )}
-        {!loading && !scraping && lastUpdated && results && (
-          <Toast
-            variant="success"
-            message={`Prices updated ${lastUpdated.toLocaleDateString(undefined, { month: "short", day: "numeric" })} at ${lastUpdated.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}`}
-          />
         )}
       </ToastContainer>
     </div>

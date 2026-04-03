@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
+import { Skeleton } from "./Skeleton";
 
 function ImageFallback() {
   return (
@@ -27,6 +29,7 @@ interface GameCardProps {
   storeIcon?: React.ReactNode;
   bottomRight?: React.ReactNode;
   highlight?: boolean;
+  variant?: "grid" | "list";
 }
 
 export function GameCard({
@@ -37,8 +40,47 @@ export function GameCard({
   storeIcon,
   bottomRight,
   highlight = false,
+  variant = "grid",
 }: GameCardProps) {
   const [imgError, setImgError] = useState(false);
+
+  if (variant === "list") {
+    return (
+      <a
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="group flex items-start gap-4 p-3 rounded-lg border border-zinc-700/50 hover:border-zinc-600 transition-colors cursor-pointer bg-zinc-900/80"
+      >
+        <div className="relative w-16 h-16 rounded overflow-hidden shrink-0">
+          {!image || imgError ? (
+            <ImageFallback />
+          ) : (
+            <Image
+              src={image}
+              alt={name}
+              fill
+              sizes="64px"
+              onError={() => setImgError(true)}
+              className="object-cover"
+            />
+          )}
+        </div>
+        <div className="flex-1 min-w-0">
+          <span className="text-sm font-bold text-white line-clamp-1">{name}</span>
+          <div className="flex items-center gap-2 mt-1">
+            {storeIcon}
+            {badges?.map((b) => (
+              <span key={b.label} className={`text-xs px-1.5 py-0.5 rounded text-white font-medium ${b.className}`}>
+                {b.label}
+              </span>
+            ))}
+          </div>
+        </div>
+        {bottomRight && <div className="shrink-0">{bottomRight}</div>}
+      </a>
+    );
+  }
 
   return (
     <a
@@ -50,11 +92,13 @@ export function GameCard({
       {!image || imgError ? (
         <ImageFallback />
       ) : (
-        <img
+        <Image
           src={image}
           alt={name}
+          fill
+          sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, 33vw"
           onError={() => setImgError(true)}
-          className="absolute inset-0 w-full h-full object-cover brightness-[0.9] group-hover:brightness-[0.95] group-hover:scale-105 transition-all duration-500 ease-out"
+          className="object-cover brightness-[0.9] group-hover:brightness-[0.95] group-hover:scale-105 transition-all duration-500 ease-out"
         />
       )}
       <div className="relative p-3">
@@ -79,15 +123,15 @@ export function GameCard({
 
 export function SkeletonCard() {
   return (
-    <div className="relative flex flex-col justify-between rounded-lg border border-zinc-700/50 overflow-hidden h-[190px] animate-skeleton">
-      <div className="absolute inset-0 bg-zinc-800" />
+    <div className="relative flex flex-col justify-between rounded-lg border border-zinc-700/50 overflow-hidden h-[190px]">
+      <Skeleton className="absolute inset-0 rounded-none" />
       <div className="relative p-3">
-        <div className="h-4 bg-zinc-700 rounded w-3/4 mb-2" />
-        <div className="h-3 bg-zinc-700 rounded w-1/2" />
+        <Skeleton className="h-4 w-3/4 mb-2" />
+        <Skeleton className="h-3 w-1/2" />
       </div>
       <div className="relative p-3 flex items-end justify-between">
-        <div className="h-5 w-5 bg-zinc-700 rounded" />
-        <div className="h-5 bg-zinc-700 rounded w-16" />
+        <Skeleton className="h-5 w-5" />
+        <Skeleton className="h-5 w-16" />
       </div>
     </div>
   );
