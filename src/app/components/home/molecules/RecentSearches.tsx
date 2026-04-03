@@ -25,17 +25,16 @@ export const RecentSearches = ({
         {searches.map((term) => (
           <div
             key={term}
-            className="flex items-center gap-2 px-3 py-2 bg-zinc-800 border border-zinc-700/50 rounded-lg group hover:border-zinc-600 transition-colors"
+            onClick={() => onSelect(term)}
+            className="flex items-center gap-2 px-3 py-2 bg-zinc-800 border border-zinc-700/50 rounded-lg group hover:border-zinc-600 transition-colors cursor-pointer"
           >
-            <button
-              type="button"
-              onClick={() => onSelect(term)}
-              className="flex-1 text-left text-sm text-zinc-300 hover:text-white transition-colors cursor-pointer truncate"
-            >
+            <span className="flex-1 text-left text-sm text-zinc-300 group-hover:text-white transition-colors truncate">
               {term}
-            </button>
+            </span>
 
-            <CloseButton onClick={() => onRemove(term)} />
+            <div onClick={(e) => e.stopPropagation()}>
+              <CloseButton onClick={() => onRemove(term)} />
+            </div>
           </div>
         ))}
       </div>
