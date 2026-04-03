@@ -4,7 +4,6 @@ import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { RecentSearches } from "../molecules/RecentSearches";
 import { useSearchStore } from "../../../stores/useSearchStore";
-import { useFilterStore } from "../../../stores/useFilterStore";
 import { useUIStore } from "../../../stores/useUIStore";
 
 const FeaturedCarousel = dynamic(() =>
@@ -20,7 +19,6 @@ export const HomeTemplate = () => {
   const removeRecentSearch = useSearchStore((s) => s.removeRecentSearch);
   const setQuery = useSearchStore((s) => s.setQuery);
   const doSearch = useSearchStore((s) => s.doSearch);
-  const viewMode = useFilterStore((s) => s.viewMode);
   const setRateLimited = useUIStore((s) => s.setRateLimited);
 
   const handleSelect = (name: string) => {
@@ -44,7 +42,6 @@ export const HomeTemplate = () => {
       </div>
       <UpcomingGames
         onRateLimited={() => setRateLimited(true)}
-        viewMode={viewMode}
       />
     </div>
   );

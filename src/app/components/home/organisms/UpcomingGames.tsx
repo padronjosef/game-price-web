@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import { GameCard, SkeletonCard } from "../../shared/molecules/GameCard";
 import { API_URL } from "../../../lib/stores";
+import { useFilterStore } from "../../../stores/useFilterStore";
 
 type UpcomingGame = {
   name: string;
@@ -24,13 +25,12 @@ const steamIcon = (
 
 type UpcomingGamesProps = {
   onRateLimited?: () => void;
-  viewMode?: "grid" | "list";
 }
 
 export const UpcomingGames = ({
   onRateLimited,
-  viewMode = "grid",
 }: UpcomingGamesProps) => {
+  const viewMode = useFilterStore((s) => s.viewMode);
   const [games, setGames] = useState<UpcomingGame[]>([]);
   const [loading, setLoading] = useState(true);
 
