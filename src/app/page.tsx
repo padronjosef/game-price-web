@@ -193,7 +193,7 @@ export default function Home() {
   const [viewMode, setViewModeState] = useState<ViewMode>("grid");
   const [viewChangeCount, setViewChangeCount] = useState(0);
   const [filterFade, setFilterFade] = useState(false);
-  const filterFadeRef = useRef<ReturnType<typeof setTimeout>>();
+  const filterFadeRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const [results, setResults] = useState<SearchResponse | null>(null);
   const [homeBg, setHomeBg] = useState<string | null>(HOME_BACKGROUNDS[0]);
   const [rates, setRates] = useState<Record<string, number>>({ USD: 1 });
