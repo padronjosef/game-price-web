@@ -17,6 +17,7 @@ import { GameNameFilter } from "../molecules/GameNameFilter";
 import { ViewToggle } from "../atoms/ViewToggle";
 import { BurgerIcon } from "../atoms/BurgerIcon";
 import { CheapestButton } from "../atoms/CheapestButton";
+import { FireIcon } from "../../shared/atoms/FireIcon";
 import { useFilterStore, selectAllStoresSelected } from "../../../stores/useFilterStore";
 import { useSearchStore } from "../../../stores/useSearchStore";
 import { useUIStore } from "../../../stores/useUIStore";
@@ -227,7 +228,10 @@ export const AppShell = ({ children }: { children: React.ReactNode }) => {
             <div className="absolute top-2 right-2 z-10">
               <ViewToggle value={viewMode} onChange={setViewMode} />
             </div>
-            <h1 className="text-3xl font-bold mb-1">Game Price Finder</h1>
+            <h1 className="text-3xl font-bold mb-1 flex items-center gap-2">
+              <FireIcon size={24} />
+              Game Price Finder
+            </h1>
             <p className="text-zinc-200 text-sm">
               Find the cheapest price across multiple stores
             </p>
@@ -242,7 +246,8 @@ export const AppShell = ({ children }: { children: React.ReactNode }) => {
             onClick={() => setMobileMenuOpen((v) => !v)}
           >
             <BurgerIcon open={mobileMenuOpen} />
-            <h1 className="text-lg font-bold text-white flex-1 text-center">
+            <h1 className="text-lg font-bold text-white flex-1 text-center flex items-center justify-center gap-1.5">
+              <FireIcon size={18} />
               Game Price Finder
             </h1>
             <div className="w-8.5 h-8.5" />
