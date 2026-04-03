@@ -1,11 +1,10 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   CurrencySelector,
   getCurrencySymbol,
   getCountryForCurrency,
-  detectUserCurrency,
   type CurrencyCode,
 } from "./components/CurrencySelector";
 import { getExchangeRates, convertPrice } from "./lib/currency";
@@ -254,17 +253,13 @@ function PriceCardGrid({
 }
 
 export default function Home() {
-  const [query, setQuery] = useState(() => {
-    if (typeof window === "undefined") return "";
-    const urlQ = new URLSearchParams(window.location.search).get("q");
-    return urlQ && urlQ.trim().length >= 2 ? urlQ.trim() : "";
-  });
-  const [currency, setCurrency] = useState<CurrencyCode>(getStoredCurrency);
+  const [query, setQuery] = useState("");
+  const [currency, setCurrency] = useState<CurrencyCode>("USD");
   const [typeFilter, setTypeFilter] = useState<TypeFilter>("all");
   const [gameFilter, setGameFilter] = useState<string>("all");
-  const [viewMode, setViewModeState] = useState<ViewMode>(getStoredViewMode);
+  const [viewMode, setViewModeState] = useState<ViewMode>("grid");
   const [results, setResults] = useState<SearchResponse | null>(null);
-  const [homeBg, setHomeBg] = useState<string | null>(getHomeBackground);
+  const [homeBg, setHomeBg] = useState<string | null>(HOME_BACKGROUNDS[0]);
   const [rates, setRates] = useState<Record<string, number>>({ USD: 1 });
   const [loading, setLoading] = useState(false);
   const [scraping, setScraping] = useState(false);
@@ -272,19 +267,15 @@ export default function Home() {
   const [error, setError] = useState("");
   const [rateLimited, setRateLimited] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
-  const [recentSearches, setRecentSearches] = useState<string[]>(() => {
-    if (typeof window === "undefined") return [];
-    const saved = localStorage.getItem("recent_searches");
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const ITEMS_PER_PAGE = 21;
   const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
   const sentinelRef = useRef<HTMLDivElement>(null);
   const [showRecent, setShowRecent] = useState(false);
   const [headerHeight, setHeaderHeight] = useState(0);
-  const [selectedStores, setSelectedStoresState] = useState<Set<string>>(getStoredStores);
+  const [selectedStores, setSelectedStoresState] = useState<Set<string>>(new Set());
   const [showStoreDropdown, setShowStoreDropdown] = useState(false);
-  const [cheapestOnly, setCheapestOnlyState] = useState(getStoredCheapestOnly);
+  const [cheapestOnly, setCheapestOnlyState] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
   const storeDropdownRef = useRef<HTMLDivElement>(null);
@@ -381,16 +372,18 @@ export default function Home() {
     };
   }
 
+  // Hydrate state from localStorage after mount
   useEffect(() => {
-    // Auto-detect currency if user never chose one
-    if (!localStorage.getItem("currency")) {
-      detectUserCurrency().then((detected) => {
-        if (detected) {
-          setCurrency(detected);
-          localStorage.setItem("currency", detected);
-        }
-      });
-    }
+    requestAnimationFrame(() => {
+      setCurrency(getStoredCurrency());
+      setViewModeState(getStoredViewMode());
+      setHomeBg(getHomeBackground());
+      setSelectedStoresState(getStoredStores());
+      setCheapestOnlyState(getStoredCheapestOnly());
+      const saved = localStorage.getItem("recent_searches");
+      if (saved) setRecentSearches(JSON.parse(saved));
+    });
+
     getExchangeRates()
       .then(setRates)
       .catch((err) => console.error("Failed to load rates:", err));
@@ -398,7 +391,10 @@ export default function Home() {
     // Search from URL query param
     const urlQ = new URLSearchParams(window.location.search).get("q");
     if (urlQ && urlQ.trim().length >= 2) {
-      Promise.resolve().then(() => doSearch(urlQ.trim()));
+      requestAnimationFrame(() => {
+        setQuery(urlQ.trim());
+        doSearch(urlQ.trim());
+      });
     }
 
     const ro = new ResizeObserver(([entry]) => {
@@ -577,7 +573,7 @@ export default function Home() {
       );
     }
     return (
-      <div className="grid gap-6" style={{ gridTemplateColumns: "repeat(3, 1fr)" }}>
+      <div className="grid grid-cols-3 gap-6">
         {prices.map((price, i) => (
           <PriceCardGrid key={price.id || `${price.store?.name}-${price.gameName}-${price.price}`} price={price} index={i} displayPrice={displayPrice} />
         ))}

@@ -69,6 +69,51 @@ export async function detectUserCurrency(): Promise<CurrencyCode | null> {
   }
 }
 
+const GLOBAL_CURRENCIES = new Set(["USD", "EUR", "GBP", "CAD", "AUD", "JPY"]);
+
+function renderCurrencyButton(
+  currency: typeof CURRENCIES[number],
+  value: CurrencyCode,
+  availableRates: Record<string, number>,
+  onChange: (code: CurrencyCode) => void,
+  setOpen: (open: boolean) => void,
+  hoveredCode: string | null,
+  setHoveredCode: (code: string | null) => void,
+) {
+  const available = currency.code === "USD" || currency.code in availableRates;
+  return (
+    <div key={currency.code} className="relative">
+      <button
+        type="button"
+        disabled={!available}
+        onClick={() => {
+          if (!available) return;
+          onChange(currency.code);
+          setOpen(false);
+        }}
+        onMouseEnter={() => setHoveredCode(currency.code)}
+        onMouseLeave={() => setHoveredCode(null)}
+        className={`w-full text-left px-4 py-2 text-sm font-mono transition-colors flex items-center gap-2 ${
+          !available
+            ? "text-zinc-600 cursor-not-allowed brightness-50"
+            : value === currency.code
+              ? "bg-blue-600/30 text-blue-300"
+              : "text-zinc-300 hover:bg-zinc-700"
+        }`}
+      >
+        <FlagIcon country={currency.country} />
+        {currency.code}
+      </button>
+
+      {hoveredCode === currency.code && (
+        <div className="absolute right-full top-0 mr-2 px-3 py-2 bg-zinc-900 border border-zinc-600 rounded-lg text-xs text-zinc-300 whitespace-nowrap shadow-lg">
+          {available ? currency.name : `${currency.name} (not available)`}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function CurrencySelector({ value, onChange, availableRates }: CurrencySelectorProps) {
   const [open, setOpen] = useState(false);
   const [hoveredCode, setHoveredCode] = useState<string | null>(null);
@@ -96,42 +141,15 @@ export function CurrencySelector({ value, onChange, availableRates }: CurrencySe
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full mt-1 bg-zinc-800 border border-zinc-700 rounded-lg shadow-xl z-50 min-w-[180px] py-1">
-          {CURRENCIES.map((currency) => {
-            const available = currency.code === "USD" || currency.code in availableRates;
-
-            return (
-              <div key={currency.code} className="relative">
-                <button
-                  type="button"
-                  disabled={!available}
-                  onClick={() => {
-                    if (!available) return;
-                    onChange(currency.code);
-                    setOpen(false);
-                  }}
-                  onMouseEnter={() => setHoveredCode(currency.code)}
-                  onMouseLeave={() => setHoveredCode(null)}
-                  className={`w-full text-left px-4 py-2 text-sm font-mono transition-colors flex items-center gap-2 ${
-                    !available
-                      ? "text-zinc-600 cursor-not-allowed brightness-50"
-                      : value === currency.code
-                        ? "bg-blue-600/30 text-blue-300"
-                        : "text-zinc-300 hover:bg-zinc-700"
-                  }`}
-                >
-                  <FlagIcon country={currency.country} />
-                  {currency.code}
-                </button>
-
-                {hoveredCode === currency.code && (
-                  <div className="absolute right-full top-0 mr-2 px-3 py-2 bg-zinc-900 border border-zinc-600 rounded-lg text-xs text-zinc-300 whitespace-nowrap shadow-lg">
-                    {available ? currency.name : `${currency.name} (not available)`}
-                  </div>
-                )}
-              </div>
-            );
-          })}
+        <div className="absolute right-0 top-full mt-1 bg-zinc-800 border border-zinc-700 rounded-lg shadow-xl z-50 min-w-[360px] py-2 grid grid-cols-2 gap-x-1">
+          <div>
+            <div className="px-4 py-1 text-[10px] uppercase tracking-wider text-zinc-500 font-semibold">Global</div>
+            {CURRENCIES.filter(c => GLOBAL_CURRENCIES.has(c.code)).map((currency) => renderCurrencyButton(currency, value, availableRates, onChange, setOpen, hoveredCode, setHoveredCode))}
+          </div>
+          <div>
+            <div className="px-4 py-1 text-[10px] uppercase tracking-wider text-zinc-500 font-semibold">Latam</div>
+            {CURRENCIES.filter(c => !GLOBAL_CURRENCIES.has(c.code)).map((currency) => renderCurrencyButton(currency, value, availableRates, onChange, setOpen, hoveredCode, setHoveredCode))}
+          </div>
         </div>
       )}
     </div>
