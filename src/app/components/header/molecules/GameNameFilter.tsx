@@ -2,12 +2,13 @@
 
 import { useState, useRef, useEffect } from "react";
 import { Collapse } from "../../shared/atoms/Collapse";
+import { ChevronIcon } from "../../shared/atoms/ChevronIcon";
 
 type GameNameFilterProps = {
   gameNames: string[];
   activeFilter: string;
   onFilterChange: (name: string) => void;
-}
+};
 
 const NameButton = ({
   name,
@@ -21,7 +22,7 @@ const NameButton = ({
   return (
     <button
       onClick={onClick}
-      className={`px-3 h-8 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
+      className={`px-3 h-8 rounded-lg text-xs font-medium transition-colors cursor-pointer whitespace-nowrap ${
         active
           ? "bg-zinc-100 text-zinc-900"
           : "bg-zinc-800 text-zinc-400 hover:text-zinc-200"
@@ -38,12 +39,22 @@ export const GameNameFilter = ({
   onFilterChange,
 }: GameNameFilterProps) => {
   const [expanded, setExpanded] = useState(false);
-  const [overflows, setOverflows] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+  const [hiddenCount, setHiddenCount] = useState(0);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!ref.current) return;
-    setOverflows(ref.current.scrollHeight > 40);
+    const el = containerRef.current;
+    if (!el) return;
+    const measure = () => {
+      const containerHeight = 32;
+      let hidden = 0;
+      const children = Array.from(el.children) as HTMLElement[];
+      for (const child of children) {
+        if (child.offsetTop >= containerHeight) hidden++;
+      }
+      setHiddenCount(hidden);
+    };
+    requestAnimationFrame(measure);
   }, [gameNames]);
 
   const select = (name: string) => {
@@ -52,6 +63,8 @@ export const GameNameFilter = ({
   };
 
   if (gameNames.length <= 1) return null;
+
+  const allNames = ["All Games", ...gameNames];
 
   return (
     <>
@@ -65,18 +78,13 @@ export const GameNameFilter = ({
       />
       <div className="w-full relative">
         <div className="overflow-hidden h-8">
-          <div ref={ref} className="flex flex-wrap gap-2 pr-10">
-            <NameButton
-              name="All Games"
-              active={activeFilter === "all"}
-              onClick={() => select("all")}
-            />
-            {gameNames.map((name) => (
+          <div ref={containerRef} className="flex flex-wrap gap-2 pr-42">
+            {allNames.map((name) => (
               <NameButton
                 key={name}
                 name={name}
-                active={activeFilter === name}
-                onClick={() => select(name)}
+                active={name === "All Games" ? activeFilter === "all" : activeFilter === name}
+                onClick={() => select(name === "All Games" ? "all" : name)}
               />
             ))}
           </div>
@@ -85,42 +93,33 @@ export const GameNameFilter = ({
           open={expanded}
           className="md:relative absolute left-0 right-0 top-0 z-101 bg-zinc-900 md:bg-transparent rounded-lg md:rounded-none shadow-2xl md:shadow-none"
         >
-          <div className="flex flex-wrap gap-2 p-2 md:p-0 md:pt-2 pr-10">
-            <NameButton
-              name="All Games"
-              active={activeFilter === "all"}
-              onClick={() => select("all")}
-            />
-            {gameNames.map((name) => (
+          <div className="flex flex-wrap gap-2 md:pt-2 pr-10">
+            {allNames.map((name) => (
               <NameButton
                 key={name}
                 name={name}
-                active={activeFilter === name}
-                onClick={() => select(name)}
+                active={name === "All Games" ? activeFilter === "all" : activeFilter === name}
+                onClick={() => select(name === "All Games" ? "all" : name)}
               />
             ))}
           </div>
         </Collapse>
 
-        {overflows && (
+        {hiddenCount > 0 && (
           <button
             type="button"
             onClick={() => setExpanded(!expanded)}
-            className="absolute right-0 top-0 h-8 w-8 flex items-center justify-center bg-zinc-800 rounded-lg text-zinc-400 hover:text-zinc-200 cursor-pointer transition-colors z-102"
+            className="absolute right-0 top-0 h-8 px-3 flex items-center gap-1 justify-center bg-zinc-800 rounded-lg text-xs font-medium text-zinc-400 hover:text-zinc-200 cursor-pointer transition-colors z-102"
           >
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className={`transition-transform duration-300 ${expanded ? "rotate-180" : ""}`}
-            >
-              <polyline points="6 9 12 15 18 9" />
-            </svg>
+            <span className="relative whitespace-nowrap inline-grid">
+              <span className={`col-start-1 row-start-1 transition-opacity duration-500 ${expanded ? "opacity-0 pointer-events-none" : "opacity-100"}`}>
+                +{hiddenCount} More Games
+              </span>
+              <span className={`col-start-1 row-start-1 transition-opacity duration-500 ${expanded ? "opacity-100" : "opacity-0 pointer-events-none"}`}>
+                {allNames.length} Total Games
+              </span>
+            </span>
+            <ChevronIcon open={expanded} />
           </button>
         )}
       </div>
