@@ -34,8 +34,7 @@ The app runs on `http://localhost:3000` by default.
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `NEXT_PUBLIC_API_URL` | `http://localhost:3002/api` | Backend API URL |
-| `PORT` | `3000` | Dev server port |
+| `INTERNAL_API_URL` | `http://localhost:3002` | Backend API base URL (server-side only) |
 
 ## Related Repos
 
@@ -54,6 +53,7 @@ This project is part of a multi-repo setup. All three repos are needed to run th
 ```
 src/app/
   page.tsx                # Main search page
+  layout.tsx              # Root layout
   components/
     BackgroundImage.tsx    # Dynamic background based on selected game
     CurrencySelector.tsx   # Currency picker with auto-detection
@@ -61,6 +61,12 @@ src/app/
     GameCard.tsx           # Game card (grid mode) and skeleton loader
     Toast.tsx              # Toast notification system
     UpcomingGames.tsx      # Upcoming games grid
+  hooks/
+    useCrossfade.ts        # Crossfade transition hook for backgrounds
   lib/
     currency.ts            # Exchange rate fetching and conversion
+  api/
+    games/featured/        # Proxy to backend featured games
+    games/upcoming/        # Proxy to backend upcoming games
+    search/stream/         # SSE proxy to backend search stream
 ```
