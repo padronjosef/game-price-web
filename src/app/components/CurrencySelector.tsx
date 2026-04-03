@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
+import { ChevronIcon } from "./ui/ChevronIcon";
 
 const CURRENCIES = [
   { code: "USD", name: "United States Dollar", symbol: "$", country: "us" },
@@ -47,21 +48,37 @@ export function getCountryForCurrency(code: string): string {
   return CURRENCIES.find((c) => c.code === code)?.country || "us";
 }
 
-function getCountry(code: string): string {
-  return getCountryForCurrency(code);
-}
-
 const COUNTRY_TO_CURRENCY: Record<string, CurrencyCode> = {
-  US: "USD", EU: "EUR", CO: "COP", GB: "GBP", BR: "BRL",
-  MX: "MXN", AR: "ARS", CL: "CLP", PE: "PEN", JP: "JPY",
-  CA: "CAD", AU: "AUD",
+  US: "USD",
+  EU: "EUR",
+  CO: "COP",
+  GB: "GBP",
+  BR: "BRL",
+  MX: "MXN",
+  AR: "ARS",
+  CL: "CLP",
+  PE: "PEN",
+  JP: "JPY",
+  CA: "CAD",
+  AU: "AUD",
   // Common EU countries → EUR
-  DE: "EUR", FR: "EUR", ES: "EUR", IT: "EUR", NL: "EUR", PT: "EUR", BE: "EUR", AT: "EUR", IE: "EUR", FI: "EUR",
+  DE: "EUR",
+  FR: "EUR",
+  ES: "EUR",
+  IT: "EUR",
+  NL: "EUR",
+  PT: "EUR",
+  BE: "EUR",
+  AT: "EUR",
+  IE: "EUR",
+  FI: "EUR",
 };
 
 export async function detectUserCurrency(): Promise<CurrencyCode | null> {
   try {
-    const res = await fetch("https://ipapi.co/json/", { signal: AbortSignal.timeout(3000) });
+    const res = await fetch("https://ipapi.co/json/", {
+      signal: AbortSignal.timeout(3000),
+    });
     const data = await res.json();
     const country = data.country_code?.toUpperCase();
     return COUNTRY_TO_CURRENCY[country] || null;
@@ -72,28 +89,38 @@ export async function detectUserCurrency(): Promise<CurrencyCode | null> {
 
 const GLOBAL_CURRENCIES = new Set(["USD", "EUR", "GBP", "CAD", "AUD", "JPY"]);
 
-function renderCurrencyButton(
-  currency: typeof CURRENCIES[number],
-  value: CurrencyCode,
-  availableRates: Record<string, number>,
-  onChange: (code: CurrencyCode) => void,
-  setOpen: (open: boolean) => void,
-  hoveredCode: string | null,
-  setHoveredCode: (code: string | null) => void,
-) {
+interface CurrencyButtonProps {
+  currency: (typeof CURRENCIES)[number];
+  value: CurrencyCode;
+  availableRates: Record<string, number>;
+  onChange: (code: CurrencyCode) => void;
+  onClose: () => void;
+  hoveredCode: string | null;
+  onHover: (code: string | null) => void;
+}
+
+function CurrencyButton({
+  currency,
+  value,
+  availableRates,
+  onChange,
+  onClose,
+  hoveredCode,
+  onHover,
+}: CurrencyButtonProps) {
   const available = currency.code === "USD" || currency.code in availableRates;
   return (
-    <div key={currency.code} className="relative">
+    <div className="relative">
       <button
         type="button"
         disabled={!available}
         onClick={() => {
           if (!available) return;
           onChange(currency.code);
-          setOpen(false);
+          onClose();
         }}
-        onMouseEnter={() => setHoveredCode(currency.code)}
-        onMouseLeave={() => setHoveredCode(null)}
+        onMouseEnter={() => onHover(currency.code)}
+        onMouseLeave={() => onHover(null)}
         className={`w-full text-left px-4 py-2 text-sm font-mono transition-colors flex items-center gap-2 ${
           !available
             ? "text-zinc-600 cursor-not-allowed brightness-50"
@@ -115,7 +142,11 @@ function renderCurrencyButton(
   );
 }
 
-export function CurrencySelector({ value, onChange, availableRates }: CurrencySelectorProps) {
+export function CurrencySelector({
+  value,
+  onChange,
+  availableRates,
+}: CurrencySelectorProps) {
   const [open, setOpen] = useState(false);
   const [hoveredCode, setHoveredCode] = useState<string | null>(null);
   const ref = useRef<HTMLDivElement>(null);
@@ -137,25 +168,53 @@ export function CurrencySelector({ value, onChange, availableRates }: CurrencySe
         onClick={() => setOpen(!open)}
         className="flex items-center gap-2 h-9 px-3 rounded-lg text-sm font-medium transition-colors cursor-pointer bg-zinc-800 border border-zinc-600/50 text-zinc-400 hover:text-zinc-200"
       >
-        <FlagIcon country={getCountry(value)} />
+        <FlagIcon country={getCountryForCurrency(value)} />
         {value}
-        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2">
-          <path d={open ? "M2 8L6 4L10 8" : "M2 4L6 8L10 4"} />
-        </svg>
+        <ChevronIcon open={open} />
       </button>
 
-      <div className={`absolute right-0 top-full mt-1 bg-zinc-800 border border-zinc-700 rounded-lg shadow-2xl z-[100] min-w-[360px] py-2 grid grid-cols-2 gap-x-1 transition-all duration-200 origin-top ${
-        open ? "opacity-100 scale-y-100 pointer-events-auto" : "opacity-0 scale-y-0 pointer-events-none"
-      }`}>
-          <div>
-            <div className="px-4 py-1 text-[10px] uppercase tracking-wider text-zinc-500 font-semibold">Global</div>
-            {CURRENCIES.filter(c => GLOBAL_CURRENCIES.has(c.code)).map((currency) => renderCurrencyButton(currency, value, availableRates, onChange, setOpen, hoveredCode, setHoveredCode))}
+      <div
+        className={`absolute right-0 top-full mt-1 bg-zinc-800 border border-zinc-700 rounded-lg shadow-2xl z-100 min-w-90 py-2 grid grid-cols-2 gap-x-1 transition-all duration-200 origin-top ${
+          open
+            ? "opacity-100 scale-y-100 pointer-events-auto"
+            : "opacity-0 scale-y-0 pointer-events-none"
+        }`}
+      >
+        <div>
+          <div className="px-4 py-1 text-[10px] uppercase tracking-wider text-zinc-500 font-semibold">
+            Global
           </div>
-          <div>
-            <div className="px-4 py-1 text-[10px] uppercase tracking-wider text-zinc-500 font-semibold">Latam</div>
-            {CURRENCIES.filter(c => !GLOBAL_CURRENCIES.has(c.code)).map((currency) => renderCurrencyButton(currency, value, availableRates, onChange, setOpen, hoveredCode, setHoveredCode))}
-          </div>
+          {CURRENCIES.filter((c) => GLOBAL_CURRENCIES.has(c.code)).map((c) => (
+            <CurrencyButton
+              key={c.code}
+              currency={c}
+              value={value}
+              availableRates={availableRates}
+              onChange={onChange}
+              onClose={() => setOpen(false)}
+              hoveredCode={hoveredCode}
+              onHover={setHoveredCode}
+            />
+          ))}
         </div>
+        <div>
+          <div className="px-4 py-1 text-[10px] uppercase tracking-wider text-zinc-500 font-semibold">
+            Latam
+          </div>
+          {CURRENCIES.filter((c) => !GLOBAL_CURRENCIES.has(c.code)).map((c) => (
+            <CurrencyButton
+              key={c.code}
+              currency={c}
+              value={value}
+              availableRates={availableRates}
+              onChange={onChange}
+              onClose={() => setOpen(false)}
+              hoveredCode={hoveredCode}
+              onHover={setHoveredCode}
+            />
+          ))}
+        </div>
+      </div>
     </div>
   );
 }

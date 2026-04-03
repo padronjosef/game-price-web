@@ -1,10 +1,9 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import Image from "next/image";
 import { Skeleton } from "./Skeleton";
-
-const API_URL = "/api";
+import { API_URL } from "../lib/stores";
 
 interface FeaturedGame {
   name: string;
@@ -18,10 +17,13 @@ interface FeaturedCarouselProps {
 }
 
 function SkeletonSlide() {
-  return <Skeleton className="shrink-0 w-[260px] md:w-[400px] aspect-video" />;
+  return <Skeleton className="shrink-0 w-65 md:w-100 aspect-video" />;
 }
 
-export function FeaturedCarousel({ onSelect, onRateLimited }: FeaturedCarouselProps) {
+export function FeaturedCarousel({
+  onSelect,
+  onRateLimited,
+}: FeaturedCarouselProps) {
   const [games, setGames] = useState<FeaturedGame[]>([]);
   const [loading, setLoading] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -31,11 +33,17 @@ export function FeaturedCarousel({ onSelect, onRateLimited }: FeaturedCarouselPr
       .then((r) => r.json())
       .then((data) => {
         if (data?.rateLimited) onRateLimited?.();
-        setGames(Array.isArray(data?.items) ? data.items : Array.isArray(data) ? data : []);
+        setGames(
+          Array.isArray(data?.items)
+            ? data.items
+            : Array.isArray(data)
+              ? data
+              : [],
+        );
         setLoading(false);
       })
       .catch(() => setLoading(false));
-  }, []);
+  }, [onRateLimited]);
 
   // Auto-scroll + drag
   useEffect(() => {
@@ -63,7 +71,9 @@ export function FeaturedCarousel({ onSelect, onRateLimited }: FeaturedCarouselPr
 
     animationId = requestAnimationFrame(step);
 
-    const handleEnter = () => { hovering = true; };
+    const handleEnter = () => {
+      hovering = true;
+    };
     const handleLeave = () => {
       hovering = false;
       if (dragging) {
@@ -93,7 +103,10 @@ export function FeaturedCarousel({ onSelect, onRateLimited }: FeaturedCarouselPr
       dragging = false;
       el.style.cursor = "grab";
       if (hasDragged) {
-        const suppress = (e: Event) => { e.stopPropagation(); e.preventDefault(); };
+        const suppress = (e: Event) => {
+          e.stopPropagation();
+          e.preventDefault();
+        };
         el.addEventListener("click", suppress, { capture: true, once: true });
       }
     };
@@ -115,45 +128,55 @@ export function FeaturedCarousel({ onSelect, onRateLimited }: FeaturedCarouselPr
     };
   }, [games, loading]);
 
-  const doubled = [...games, ...games];
+  const doubled = useMemo(() => [...games, ...games], [games]);
 
   return (
-    <div className="w-full relative z-10 mb-10 mx-auto" style={{ maxWidth: 1400 }}>
+    <div
+      className="w-full relative z-10 mb-10 mx-auto"
+      style={{ maxWidth: 1400 }}
+    >
       <div className="max-w-5xl mx-auto px-4 mb-3">
-        <h2 className="text-lg font-bold text-white"><span className="bg-black/70 px-2 py-1 rounded">Trending on Steam</span></h2>
+        <h2 className="text-lg font-bold text-white">
+          <span className="bg-black/70 px-2 py-1 rounded">
+            Trending on Steam
+          </span>
+        </h2>
       </div>
       <div
         ref={scrollRef}
         className="flex gap-3 overflow-auto px-4 select-none"
         style={{
           scrollbarWidth: "none",
-          maskImage: "linear-gradient(to right, transparent 0%, black 13.5%, black 86.5%, transparent 100%)",
-          WebkitMaskImage: "linear-gradient(to right, transparent 0%, black 13.5%, black 86.5%, transparent 100%)",
+          maskImage:
+            "linear-gradient(to right, transparent 0%, black 13.5%, black 86.5%, transparent 100%)",
+          WebkitMaskImage:
+            "linear-gradient(to right, transparent 0%, black 13.5%, black 86.5%, transparent 100%)",
         }}
       >
-        {(loading || games.length === 0) && (
-          [...Array(6)].map((_, i) => <SkeletonSlide key={`skel-${i}`} />)
-        )}
-        {!loading && doubled.map((game, i) => (
-          <button
-            key={`${game.appId}-${i}`}
-            onClick={() => onSelect(game.name)}
-            className="group shrink-0 relative w-[260px] md:w-[400px] aspect-video rounded-lg overflow-hidden cursor-pointer flex flex-col justify-start"
-          >
-            <Image
-              src={game.image}
-              alt={game.name}
-              fill
-              sizes="(max-width: 768px) 260px, 400px"
-              className="object-cover group-hover:scale-110 transition-all duration-500 ease-out"
-            />
-            <div className="relative p-3">
-              <span className="bg-black/70 text-white text-sm font-bold px-2 py-1 rounded leading-snug line-clamp-2 block w-fit">
-                {game.name}
-              </span>
-            </div>
-          </button>
-        ))}
+        {(loading || games.length === 0) &&
+          [...Array(6)].map((_, i) => <SkeletonSlide key={`skel-${i}`} />)}
+        {!loading &&
+          doubled.map((game, i) => (
+            <button
+              key={`${game.appId}-${i}`}
+              onClick={() => onSelect(game.name)}
+              className="group shrink-0 relative w-65 md:w-100 aspect-video rounded-lg overflow-hidden cursor-pointer flex flex-col justify-start"
+            >
+              <Image
+                src={game.image}
+                alt={game.name}
+                fill
+                loading="eager"
+                sizes="(max-width: 768px) 260px, 400px"
+                className="object-cover group-hover:scale-110 transition-all duration-500 ease-out"
+              />
+              <div className="relative p-3">
+                <span className="bg-black/70 text-white text-sm font-bold px-2 py-1 rounded leading-snug line-clamp-2 block w-fit">
+                  {game.name}
+                </span>
+              </div>
+            </button>
+          ))}
       </div>
     </div>
   );

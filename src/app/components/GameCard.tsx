@@ -7,7 +7,15 @@ import { Skeleton } from "./Skeleton";
 function ImageFallback() {
   return (
     <div className="absolute inset-0 bg-zinc-800 flex items-center justify-center">
-      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" className="text-zinc-600">
+      <svg
+        width="48"
+        height="48"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        className="text-zinc-600"
+      >
         <rect x="2" y="6" width="20" height="12" rx="2" />
         <circle cx="9" cy="12" r="2" />
         <path d="M15 10v4M13 12h4" />
@@ -28,7 +36,6 @@ interface GameCardProps {
   badges?: Badge[];
   storeIcon?: React.ReactNode;
   bottomRight?: React.ReactNode;
-  highlight?: boolean;
   variant?: "grid" | "list";
 }
 
@@ -39,7 +46,6 @@ export function GameCard({
   badges,
   storeIcon,
   bottomRight,
-  highlight = false,
   variant = "grid",
 }: GameCardProps) {
   const [imgError, setImgError] = useState(false);
@@ -67,11 +73,16 @@ export function GameCard({
           )}
         </div>
         <div className="flex-1 min-w-0">
-          <span className="text-sm font-bold text-white line-clamp-1">{name}</span>
+          <span className="text-sm font-bold text-white line-clamp-1">
+            {name}
+          </span>
           <div className="flex items-center gap-2 mt-1">
             {storeIcon}
             {badges?.map((b) => (
-              <span key={b.label} className={`text-xs px-1.5 py-0.5 rounded text-white font-medium ${b.className}`}>
+              <span
+                key={b.label}
+                className={`text-xs px-1.5 py-0.5 rounded text-white font-medium ${b.className}`}
+              >
                 {b.label}
               </span>
             ))}
@@ -87,7 +98,7 @@ export function GameCard({
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className="group relative flex flex-col justify-between rounded-lg border border-zinc-700/50 overflow-hidden h-[190px] cursor-pointer transition-all duration-300"
+      className="group relative flex flex-col justify-between rounded-lg border border-zinc-700/50 overflow-hidden h-47.5 cursor-pointer transition-all duration-300"
     >
       {!image || imgError ? (
         <ImageFallback />
@@ -110,7 +121,10 @@ export function GameCard({
         <div className="flex items-center gap-2">
           {storeIcon}
           {badges?.map((b) => (
-            <span key={b.label} className={`text-sm px-2 py-0.5 rounded text-white font-medium ${b.className}`}>
+            <span
+              key={b.label}
+              className={`text-sm px-2 py-0.5 rounded text-white font-medium ${b.className}`}
+            >
               {b.label}
             </span>
           ))}
@@ -123,7 +137,7 @@ export function GameCard({
 
 export function SkeletonCard() {
   return (
-    <div className="relative flex flex-col justify-between rounded-lg border border-zinc-700/50 overflow-hidden h-[190px]">
+    <div className="relative flex flex-col justify-between rounded-lg border border-zinc-700/50 overflow-hidden h-47.5">
       <Skeleton className="absolute inset-0 rounded-none" />
       <div className="relative p-3">
         <Skeleton className="h-4 w-3/4 mb-2" />

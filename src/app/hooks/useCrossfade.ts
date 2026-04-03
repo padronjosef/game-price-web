@@ -16,7 +16,9 @@ export function useCrossfade() {
 
   const setImage = useCallback((image: string) => {
     if (image === currentRef.current) return;
+
     currentRef.current = image;
+
     setActiveLayer((prev) => {
       if (prev === "a") {
         setLayerB(image);

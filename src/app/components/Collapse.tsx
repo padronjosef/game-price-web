@@ -1,5 +1,3 @@
-"use client";
-
 interface CollapseProps {
   open: boolean;
   collapsedHeight?: string;

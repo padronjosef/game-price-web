@@ -3,8 +3,7 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { GameCard, SkeletonCard } from "./GameCard";
-
-const API_URL = "/api";
+import { API_URL } from "../lib/stores";
 
 interface UpcomingGame {
   name: string;
@@ -26,10 +25,12 @@ const steamIcon = (
 interface UpcomingGamesProps {
   onRateLimited?: () => void;
   viewMode?: "grid" | "list";
-  viewKey?: number;
 }
 
-export function UpcomingGames({ onRateLimited, viewMode = "grid", viewKey = 0 }: UpcomingGamesProps) {
+export function UpcomingGames({
+  onRateLimited,
+  viewMode = "grid",
+}: UpcomingGamesProps) {
   const [games, setGames] = useState<UpcomingGame[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -38,16 +39,26 @@ export function UpcomingGames({ onRateLimited, viewMode = "grid", viewKey = 0 }:
       .then((r) => r.json())
       .then((data) => {
         if (data?.rateLimited) onRateLimited?.();
-        setGames(Array.isArray(data?.items) ? data.items : Array.isArray(data) ? data : []);
+        setGames(
+          Array.isArray(data?.items)
+            ? data.items
+            : Array.isArray(data)
+              ? data
+              : [],
+        );
         setLoading(false);
       })
       .catch(() => setLoading(false));
-  }, []);
+  }, [onRateLimited]);
 
   return (
     <div className="w-full max-w-5xl mx-auto px-4 mb-6 relative z-10">
-      <h2 className="text-lg font-bold text-white mb-3"><span className="bg-black/70 px-2 py-1 rounded">Upcoming Games</span></h2>
-      <div key={viewKey} className={`animate-fade-in-up ${viewMode === "list" ? "space-y-3" : "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6"}`}>
+      <h2 className="text-lg font-bold text-white mb-3">
+        <span className="bg-black/70 px-2 py-1 rounded">Upcoming Games</span>
+      </h2>
+      <div
+        className={`animate-fade-in-up ${viewMode === "list" ? "space-y-3" : "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6"}`}
+      >
         {(loading || games.length === 0) &&
           [...Array(12)].map((_, i) => <SkeletonCard key={`skel-${i}`} />)}
         {!loading &&

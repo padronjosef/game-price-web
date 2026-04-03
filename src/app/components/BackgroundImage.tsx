@@ -1,5 +1,3 @@
-"use client";
-
 import type { CrossfadeLayers } from "../hooks/useCrossfade";
 
 interface BackgroundImageProps {
