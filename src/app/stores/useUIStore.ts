@@ -8,6 +8,7 @@ type UIState = {
   headerHeight: number;
   rateLimited: boolean;
   filterFade: boolean;
+  toastVisible: boolean;
 }
 
 let filterFadeTimer: ReturnType<typeof setTimeout> | undefined;
@@ -27,6 +28,7 @@ export const useUIStore = create<UIState & UIActions>()((set) => ({
   headerHeight: 0,
   rateLimited: false,
   filterFade: false,
+  toastVisible: false,
 
   // Actions
   setMobileMenuOpen: (value) => {

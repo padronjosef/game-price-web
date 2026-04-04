@@ -17,6 +17,7 @@ import { ViewToggle } from "../atoms/ViewToggle";
 import { BurgerIcon } from "../atoms/BurgerIcon";
 import { CheapestButton } from "../atoms/CheapestButton";
 import { FireIcon } from "../../shared/atoms/FireIcon";
+import { ScrollToTop } from "../../shared/atoms/ScrollToTop";
 import { useFilterStore, selectAllStoresSelected } from "../../../stores/useFilterStore";
 import { useSearchStore } from "../../../stores/useSearchStore";
 import { useUIStore } from "../../../stores/useUIStore";
@@ -332,6 +333,8 @@ export const AppShell = ({ children }: { children: React.ReactNode }) => {
           />
         )}
       </ToastContainer>
+
+      <ScrollToTop />
     </div>
   );
 };

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { CloseButton } from "../../shared/atoms/CloseButton";
+import { useUIStore } from "../../../stores/useUIStore";
 
 type ResultsToastProps = {
   resultCount: number;
@@ -20,6 +21,11 @@ export const ResultsToast = ({
   const [dismissedFor, setDismissedFor] = useState<number | null>(null);
 
   const isDismissed = dismissedFor === resultCount;
+  const isShowing = visible && !isDismissed;
+
+  useEffect(() => {
+    useUIStore.setState({ toastVisible: isShowing });
+  }, [isShowing]);
 
   const dismiss = () => {
     setHiding(true);
