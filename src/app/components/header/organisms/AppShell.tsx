@@ -194,6 +194,13 @@ export const AppShell = ({ children }: { children: React.ReactNode }) => {
   }, [heroImage, setBgImage]);
 
   useEffect(() => {
+    if (!mobileMenuOpen) return;
+    const close = () => useUIStore.setState({ mobileMenuOpen: false });
+    window.addEventListener("scroll", close, { once: true });
+    return () => window.removeEventListener("scroll", close);
+  }, [mobileMenuOpen]);
+
+  useEffect(() => {
     triggerFilterFade();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedStores, cheapestOnly, typeFilter, gameFilter, currency, viewMode]);
