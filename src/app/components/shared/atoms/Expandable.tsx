@@ -44,17 +44,21 @@ export const Expandable = ({
   return (
     <div>
       <div className="w-full flex items-center py-1 cursor-pointer" onClick={toggle}>
-        {leftSlot && (
+        {leftSlot ? (
           <div
             onClick={(e) => { e.stopPropagation(); onLeftSlotClick?.(); }}
-            className="cursor-pointer mr-2"
+            className="flex items-center gap-2 cursor-pointer"
           >
             {leftSlot}
+            <span className="text-sm font-bold text-white uppercase tracking-wider">
+              {title}
+            </span>
           </div>
+        ) : (
+          <span className="text-sm font-bold text-white uppercase tracking-wider">
+            {title}
+          </span>
         )}
-        <span className="text-sm font-bold text-white uppercase tracking-wider">
-          {title}
-        </span>
         <div className={`flex items-center gap-1 ${compact ? "" : "ml-auto"}`}>
           {rightSlot}
           <ChevronIcon open={open} />
