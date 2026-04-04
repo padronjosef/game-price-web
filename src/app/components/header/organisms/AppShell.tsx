@@ -209,7 +209,7 @@ export const AppShell = ({ children }: { children: React.ReactNode }) => {
 
       {/* Mobile menu backdrop */}
       <div
-        onClick={() => setMobileMenuOpen(false)}
+        onClick={() => useUIStore.setState({ mobileMenuOpen: false })}
         className={`md:hidden fixed inset-0 bg-black/50 z-499 transition-opacity duration-200 ${
           mobileMenuOpen
             ? "opacity-100 pointer-events-auto"
