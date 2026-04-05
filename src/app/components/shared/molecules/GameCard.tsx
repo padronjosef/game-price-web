@@ -3,27 +3,14 @@
 import { useState } from "react";
 import Image from "next/image";
 import { motion } from "motion/react";
-import { Skeleton } from "../atoms/Skeleton";
+import { Skeleton } from "@/shared/UI/Skeleton";
+import { Gamepad2, Share2 } from "lucide-react";
 
-const ImageFallback = () => {
-  return (
-    <div className="absolute inset-0 bg-zinc-800 flex items-center justify-center">
-      <svg
-        width="48"
-        height="48"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.2"
-        className="text-zinc-600"
-      >
-        <rect x="2" y="6" width="20" height="12" rx="2" />
-        <circle cx="9" cy="12" r="2" />
-        <path d="M15 10v4M13 12h4" />
-      </svg>
-    </div>
-  );
-};
+const ImageFallback = () => (
+  <div className="absolute inset-0 bg-muted flex items-center justify-center">
+    <Gamepad2 className="size-12 text-muted-foreground/40" />
+  </div>
+);
 
 type Badge = {
   label: string;
@@ -31,11 +18,17 @@ type Badge = {
 };
 
 type GameCardProps = {
-  href: string;
+  href?: string;
+  onClick?: () => void;
   image: string;
   name: string;
   badges?: Badge[];
   storeIcon?: React.ReactNode;
+  storeName?: string;
+  price?: React.ReactNode;
+  originalPrice?: React.ReactNode;
+  discount?: string;
+  updatedAt?: string;
   bottomRight?: React.ReactNode;
   variant?: "grid" | "list";
 };
@@ -49,22 +42,37 @@ const cardAnimation = {
 
 export const GameCard = ({
   href,
+  onClick,
   image,
   name,
   badges,
   storeIcon,
+  storeName,
+  price,
+  originalPrice,
+  discount,
+  updatedAt,
   bottomRight,
   variant = "grid",
 }: GameCardProps) => {
   const [imgError, setImgError] = useState(false);
 
+  const handleShare = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const url = href || window.location.href;
+    navigator.clipboard.writeText(url);
+  };
+
+  const linkProps = onClick
+    ? { onClick, role: "button" as const }
+    : { href, target: "_blank" as const, rel: "noopener noreferrer" };
+
   if (variant === "list") {
     return (
       <motion.a
-        href={href}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="group flex items-start gap-4 p-3 rounded-lg border border-zinc-700/50 hover:border-zinc-600 transition-colors duration-300 cursor-pointer bg-zinc-900/80"
+        {...linkProps}
+        className="group flex items-start gap-4 p-3 rounded-lg border border-border/50 hover:border-border transition-colors duration-300 cursor-pointer bg-background/90"
         layout
         {...cardAnimation}
       >
@@ -82,83 +90,174 @@ export const GameCard = ({
             />
           )}
         </div>
-        <div className="flex-1 min-w-0">
-          <span className="text-sm font-bold text-white line-clamp-1">
-            {name}
-          </span>
-          <div className="flex items-center gap-2 mt-1">
-            {storeIcon}
-            {badges?.map((b) => (
-              <span
-                key={b.label}
-                className={`text-xs px-1.5 py-0.5 rounded text-white font-medium ${b.className}`}
-              >
-                {b.label}
+
+        <div className="flex justify-between w-full h-16">
+          <div className="min-w-0 h-full flex flex-col justify-between">
+            <div className="flex items-center gap-2">
+              {badges?.map((b) => (
+                <span
+                  key={b.label}
+                  className={`text-xs px-1.5 py-0.5 rounded text-foreground font-medium shrink-0 ${b.className}`}
+                >
+                  {b.label}
+                </span>
+              ))}
+
+              <span className="text-sm font-bold text-foreground line-clamp-1">
+                {name}
               </span>
-            ))}
+            </div>
+
+            <div className="flex items-center gap-2">
+              {storeIcon}
+
+              {storeName && (
+                <span className="text-xs text-muted-foreground uppercase tracking-wider">
+                  {storeName}
+                </span>
+              )}
+            </div>
           </div>
+
+          {(price || bottomRight) && (
+            <div className="shrink-0 text-right">
+              {price ? (
+                <div className="flex flex-col items-end gap-1">
+                  <span className="text-xl font-bold">{price}</span>
+
+                  {originalPrice && (
+                    <span className="text-xs text-muted-foreground">
+                      {originalPrice}
+                    </span>
+                  )}
+                </div>
+              ) : (
+                bottomRight
+              )}
+            </div>
+          )}
         </div>
-        {bottomRight && <div className="shrink-0">{bottomRight}</div>}
       </motion.a>
     );
   }
 
   return (
     <motion.a
-      href={href}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="group relative flex flex-col justify-between rounded-lg border border-zinc-700/50 overflow-hidden h-47.5 cursor-pointer transition-colors duration-300"
+      {...linkProps}
+      className="group flex flex-col rounded-sm border border-border/50 overflow-hidden cursor-pointer hover:border-border transition-colors duration-300 bg-background/90"
       layout
       {...cardAnimation}
     >
-      {!image || imgError ? (
-        <ImageFallback />
-      ) : (
-        <Image
-          src={image}
-          alt={name}
-          fill
-          sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, 33vw"
-          onError={() => setImgError(true)}
-          className="object-cover brightness-[0.9] group-hover:brightness-[0.95] group-hover:scale-105 transition-all duration-500 ease-out"
-        />
-      )}
-      <div className="relative p-3">
-        <span className="bg-black/70 text-white text-sm font-bold px-2 py-1 rounded leading-snug line-clamp-2 block w-fit">
-          {name}
-        </span>
-      </div>
-      <div className="relative p-3 flex items-end justify-between gap-2">
-        <div className="flex items-center gap-2">
-          {storeIcon}
+      {/* Image */}
+      <div className="relative aspect-[16/7.2] overflow-hidden">
+        {!image || imgError ? (
+          <ImageFallback />
+        ) : (
+          <Image
+            src={image}
+            alt={name}
+            fill
+            sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, 33vw"
+            onError={() => setImgError(true)}
+            className="object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+          />
+        )}
+        {/* Badges on image */}
+        <div className="absolute top-2 left-2 flex gap-1.5">
+          {discount && (
+            <span className="text-xs font-bold px-2 py-1 rounded bg-primary text-primary-foreground">
+              {discount}
+            </span>
+          )}
           {badges?.map((b) => (
             <span
               key={b.label}
-              className={`text-sm px-2 py-0.5 rounded text-white font-medium ${b.className}`}
+              className={`text-xs font-bold px-2 py-1 rounded text-foreground ${b.className}`}
             >
               {b.label}
             </span>
           ))}
         </div>
-        {bottomRight}
+      </div>
+
+      {/* Info */}
+      <div className="flex flex-col gap-2 p-3">
+        {/* Name + Share */}
+        <div className="flex items-start justify-between gap-2">
+          <h3 className="text-sm font-bold text-foreground line-clamp-2 min-h-[2.8em]">
+            {name}
+          </h3>
+          {href && (
+            <button
+              onClick={handleShare}
+              className="shrink-0 mt-0.5 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+            >
+              <Share2 className="size-4" />
+            </button>
+          )}
+        </div>
+
+        {/* Price */}
+        {price && (
+          <div className="flex items-baseline gap-2 justify-end">
+            {originalPrice && (
+              <span className="text-sm text-muted-foreground line-through">
+                {originalPrice}
+              </span>
+            )}
+            <span className="text-xl font-bold text-primary">{price}</span>
+          </div>
+        )}
+
+        {/* Store row */}
+        {(storeIcon || storeName || updatedAt || bottomRight) && (
+          <div className="flex items-end gap-2 pt-2 border-t border-border/50">
+            {storeIcon}
+            {storeName && (
+              <span className="text-xs text-muted-foreground uppercase tracking-wider font-medium">
+                {storeName}
+              </span>
+            )}
+            <div className="ml-auto flex items-end gap-2">
+              {updatedAt && (
+                <span className="text-xs text-muted-foreground italic">
+                  {updatedAt}
+                </span>
+              )}
+              {bottomRight}
+            </div>
+          </div>
+        )}
       </div>
     </motion.a>
   );
 };
 
-export const SkeletonCard = () => {
-  return (
-    <div className="relative flex flex-col justify-between rounded-lg border border-zinc-700/50 overflow-hidden h-47.5">
-      <Skeleton className="absolute inset-0 rounded-none" />
-      <div className="relative p-3">
-        <Skeleton className="h-4 w-3/4 mb-2" />
-        <Skeleton className="h-3 w-1/2" />
+export const SkeletonCard = () => (
+  <div className="flex flex-col rounded-sm border border-border/50 overflow-hidden bg-background">
+    <Skeleton className="aspect-[16/7.2] rounded-none" />
+    <div className="p-3 flex flex-col gap-2">
+      {/* Name + Share */}
+      <div className="flex items-start justify-between gap-2 min-h-[2.8em]">
+        <div className="flex-1 flex flex-col gap-1">
+          <Skeleton className="h-4 w-3/4" />
+          <Skeleton className="h-4 w-1/2" />
+        </div>
+        <Skeleton className="size-4 shrink-0 mt-0.5" />
       </div>
-      <div className="relative p-3 flex items-end justify-between">
-        <Skeleton className="h-5 w-5" />
-        <Skeleton className="h-5 w-16" />
+      {/* Price */}
+      <div className="flex items-baseline gap-2 justify-end">
+        <Skeleton className="h-3.5 w-14" />
+        <Skeleton className="h-6 w-20" />
+      </div>
+      {/* Store row */}
+      <div className="flex items-end gap-2 pt-2 border-t border-border/50">
+        <Skeleton className="size-5 rounded" />
+        <Skeleton className="h-3 w-20" />
+        <div className="ml-auto">
+          <Skeleton className="h-3 w-24" />
+        </div>
       </div>
     </div>
-  );
-};
+  </div>
+);

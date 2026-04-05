@@ -2,7 +2,7 @@
 
 import { GameCard } from "@/app/components/shared/molecules/GameCard";
 import { StoreIcon } from "@/app/components/shared/atoms/StoreIcon";
-import type { PriceResult } from "@/app/lib/stores";
+import type { PriceResult } from "@/shared/lib/stores";
 
 type PriceCardProps = {
   price: PriceResult;
@@ -23,6 +23,22 @@ export const PriceCard = ({
   if (price.gameType === "bundle")
     badges.push({ label: "Bundle", className: "bg-purple-500" });
   const priceCurrency = price.currency || "USD";
+  const sName = price.store?.name || price.storeName || "";
+
+  const timeAgo = (iso: string) => {
+    const seconds = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
+    if (seconds < 60) return "Updated just now";
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return `Updated ${minutes}m ago`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `Updated ${hours}h ago`;
+    return `Updated ${Math.floor(hours / 24)}d ago`;
+  };
+
+  const hasDiscount = price.originalPrice && price.originalPrice > price.price;
+  const discountPct = hasDiscount
+    ? `-${Math.round((1 - price.price / price.originalPrice!) * 100)}%`
+    : undefined;
 
   return (
     <GameCard
@@ -31,26 +47,19 @@ export const PriceCard = ({
       name={price.gameName}
       badges={badges}
       variant={variant}
-      storeIcon={
-        <StoreIcon storeName={price.store?.name || price.storeName || ""} />
+      storeIcon={<StoreIcon storeName={sName} />}
+      storeName={sName}
+      discount={discountPct}
+      updatedAt={price.scrapedAt ? timeAgo(price.scrapedAt) : undefined}
+      price={
+        <span className={index === 0 ? "text-primary" : "text-foreground"}>
+          {displayPrice(Number(price.price), priceCurrency)}
+        </span>
       }
-      bottomRight={
-        <div
-          className={`flex flex-col items-end ${variant === "grid" ? "bg-black/70 rounded px-2 py-1" : ""}`}
-        >
-          {price.originalPrice && price.originalPrice > price.price && (
-            <span className="text-xs text-zinc-200 line-through">
-              {displayPrice(Number(price.originalPrice), priceCurrency)}
-            </span>
-          )}
-          <span
-            className={`font-bold ${variant === "list" ? "text-base" : "text-lg"} ${
-              index === 0 ? "text-green-400" : "text-white"
-            }`}
-          >
-            {displayPrice(Number(price.price), priceCurrency)}
-          </span>
-        </div>
+      originalPrice={
+        hasDiscount
+          ? displayPrice(Number(price.originalPrice), priceCurrency)
+          : undefined
       }
     />
   );

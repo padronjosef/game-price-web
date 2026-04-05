@@ -2,13 +2,16 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
-import { getCurrencySymbol } from "@/app/lib/currency";
-import { convertPrice } from "@/app/lib/currency";
+import { SearchX } from "lucide-react";
+import { getCurrencySymbol } from "@/shared/lib/currency";
+import { convertPrice } from "@/shared/lib/currency";
 import { PriceGrid } from "../organisms/PriceGrid";
-import { useSearchStore } from "@/app/stores/useSearchStore";
-import { useFilterStore } from "@/app/stores/useFilterStore";
-import { useDisplayPrices } from "@/app/stores/selectors";
-import { SearchSkeleton } from "../atoms/SearchSkeleton";
+import { useSearchStore } from "@/shared/stores/useSearchStore";
+import { useFilterStore } from "@/shared/stores/useFilterStore";
+import { useDisplayPrices, useOtherStoresCount } from "@/shared/stores/selectors";
+import { PriceGridSkeleton } from "../organisms/PriceGridSkeleton";
+import { SearchFiltersSkeleton } from "../molecules/SearchFiltersSkeleton";
+import { SearchFilters } from "../molecules/SearchFilters";
 const ITEMS_PER_PAGE = 21;
 
 export const SearchTemplate = () => {
@@ -33,6 +36,8 @@ export const SearchTemplate = () => {
 
   // Derived
   const displayPrices = useDisplayPrices();
+  const otherStoresCount = useOtherStoresCount();
+  const toggleAllStores = useFilterStore((s) => s.toggleAllStores);
 
   // Search from URL
   useEffect(() => {
@@ -79,25 +84,62 @@ export const SearchTemplate = () => {
 
   return (
     <div className="flex-1 pb-4 relative z-10">
+      {showSkeleton ? <SearchFiltersSkeleton /> : <SearchFilters />}
       <div className="max-w-5xl mx-auto px-4">
-        {showSkeleton && <SearchSkeleton />}
+        {showSkeleton && <PriceGridSkeleton />}
 
         {!loading && results && (
-          <PriceGrid
-            prices={displayPrices || []}
-            viewMode={viewMode}
-            displayPrice={displayPrice}
-            visibleCount={visibleCount}
-            typeFilter={typeFilter}
-            showLoadMore={!!displayPrices && displayPrices.length > visibleCount}
-            sentinelRef={sentinelCallback}
-          />
+          <>
+            <PriceGrid
+              prices={displayPrices || []}
+              viewMode={viewMode}
+              displayPrice={displayPrice}
+              visibleCount={visibleCount}
+              typeFilter={typeFilter}
+              showLoadMore={!!displayPrices && displayPrices.length > visibleCount}
+              sentinelRef={sentinelCallback}
+            />
+
+            {displayPrices?.length === 0 && otherStoresCount === 0 && (
+              <div className="flex flex-col items-center justify-center py-16 text-center">
+                <div className="size-20 rounded-2xl bg-background/90 border border-border/50 flex items-center justify-center mb-5">
+                  <SearchX className="size-10 text-primary" />
+                </div>
+                <h2 className="text-2xl font-bold text-foreground mb-2">No results found</h2>
+                <p className="text-muted-foreground max-w-xs bg-background/90 border border-border/50 rounded-lg px-4 py-3">
+                  We couldn't find any deals for that game. Try a different name or check your spelling.
+                </p>
+              </div>
+            )}
+
+            {displayPrices?.length === 0 && otherStoresCount > 0 && (
+              <div className="flex flex-col items-center justify-center py-16 text-center">
+                <div className="size-20 rounded-2xl bg-background/90 border border-border/50 flex items-center justify-center mb-5">
+                  <SearchX className="size-10 text-primary" />
+                </div>
+                <h2 className="text-2xl font-bold text-foreground mb-2">No results found</h2>
+                <p className="text-muted-foreground max-w-xs mb-4">
+                  No results in your selected stores, but we found some elsewhere.
+                </p>
+                <button
+                  onClick={toggleAllStores}
+                  className="px-4 py-2 rounded-lg bg-primary text-primary-foreground font-medium cursor-pointer hover:bg-primary/80 transition-colors"
+                >
+                  {otherStoresCount} result{otherStoresCount > 1 ? "s" : ""} in other stores — Show all
+                </button>
+              </div>
+            )}
+          </>
         )}
 
         {!loading && !results && q && lastUpdated && (
-          <div className="flex flex-col items-center justify-center py-16">
-            <p className="text-zinc-400 text-lg">
-              No results found. Try a different search term.
+          <div className="flex flex-col items-center justify-center py-16 text-center">
+            <div className="size-20 rounded-2xl bg-background/90 border border-border/50 flex items-center justify-center mb-5">
+              <SearchX className="size-10 text-primary" />
+            </div>
+            <h2 className="text-2xl font-bold text-foreground mb-2">No results found</h2>
+            <p className="text-muted-foreground max-w-xs">
+              We couldn't find any deals for that game. Try a different name or check your spelling.
             </p>
           </div>
         )}

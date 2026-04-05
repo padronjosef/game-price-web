@@ -1,11 +1,12 @@
-import { Skeleton } from "@/app/components/shared/atoms/Skeleton";
+import { SkeletonCard } from "@/app/components/shared/molecules/GameCard";
+import { Skeleton } from "@/shared/UI/Skeleton";
 
 export const PriceGridSkeleton = () => (
   <>
-    <Skeleton className="h-7 w-32 mb-3" />
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
+    <Skeleton className="h-8 w-28 mb-4" />
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
       {[...Array(9)].map((_, i) => (
-        <Skeleton key={i} className="h-[190px]" />
+        <SkeletonCard key={i} />
       ))}
     </div>
   </>

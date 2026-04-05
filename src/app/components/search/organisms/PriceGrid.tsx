@@ -3,8 +3,8 @@
 import { AnimatePresence } from "motion/react";
 import { PriceCard } from "../molecules/PriceCard";
 import { SkeletonCard } from "@/app/components/shared/molecules/GameCard";
-import { useGridColumns } from "@/app/hooks/useGridColumns";
-import type { PriceResult, TypeFilter, ViewMode } from "@/app/lib/stores";
+import { useGridColumns } from "@/shared/hooks/useGridColumns";
+import type { PriceResult, TypeFilter, ViewMode } from "@/shared/lib/stores";
 
 type PriceGridProps = {
   prices: PriceResult[];
@@ -19,8 +19,8 @@ type PriceGridProps = {
 const TYPE_GROUPS = [
   { type: "bundle", label: "Bundles" },
   { type: "game", label: "Base Games" },
-  { type: "unknown", label: "Other" },
   { type: "dlc", label: "DLCs" },
+  { type: "other", label: "Other" },
 ] as const;
 
 const groupByType = (prices: PriceResult[]) => {
@@ -86,13 +86,7 @@ export const PriceGrid = ({
   const columns = useGridColumns();
 
   if (prices.length === 0) {
-    return (
-      <p className="text-zinc-400">
-        {typeFilter === "all"
-          ? "No prices found for this game."
-          : `No ${typeFilter} prices found.`}
-      </p>
-    );
+    return null;
   }
 
   if (typeFilter !== "all") {
@@ -133,9 +127,9 @@ export const PriceGrid = ({
           : 0;
         return (
           <div key={group.type}>
-            <h3 className="text-base font-semibold text-white tracking-wider mb-2">
-              <span className="bg-black/70 px-2 py-1 rounded">{group.label}</span>
-            </h3>
+            <h2 className="text-2xl font-bold text-foreground mb-4">
+              {group.label}
+            </h2>
             <PriceList
               prices={group.items}
               viewMode={viewMode}
