@@ -1,7 +1,7 @@
 import { Skeleton } from "@/shared/UI/Skeleton";
 
 export const RecentSearchesSkeleton = () => (
-  <div className="w-full max-w-5xl mx-auto px-4 mb-6 relative z-10">
+  <div className="w-full max-w-5xl mx-auto px-4 mb-6 mt-4 md:mt-0 relative z-10">
     <div className="mb-5">
       <Skeleton className="h-8 w-52 mb-1" />
       <Skeleton className="h-4 w-44" />
