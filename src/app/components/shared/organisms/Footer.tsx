@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useFilterStore } from "@/shared/stores/useFilterStore";
 import { useSearchStore } from "@/shared/stores/useSearchStore";
-import { CURRENCIES, getCountryForCurrency } from "@/shared/lib/currency";
+import { CURRENCIES } from "@/shared/lib/currency";
 import { MAIN_STORES, OTHER_STORES } from "@/shared/lib/stores/constants";
 import type { CurrencyCode } from "@/shared/lib/stores";
 import Image from "next/image";
