@@ -1,21 +1,17 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { createPortal } from "react-dom";
 import { ChevronDown } from "lucide-react";
 import { Button } from "@/shared/UI/Button";
 
 
 export const ScrollToTop = () => {
-  const [scrolled, setScrolled] = useState(false);
-  const [mounted, setMounted] = useState(false);
+  const [visible, setVisible] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => { setMounted(true) }, []);
 
   useEffect(() => {
     const handleScroll = () => {
-      setScrolled(window.scrollY > 100);
+      setVisible(window.scrollY > 100);
 
       const footer = document.querySelector("footer");
       const el = ref.current;
@@ -32,11 +28,7 @@ export const ScrollToTop = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const visible = scrolled;
-
-  if (!mounted) return null;
-
-  return createPortal(
+  return (
     <div
       ref={ref}
       className={`fixed bottom-2 left-1/2 -translate-x-1/2 z-[9999] transition-opacity duration-500 ${
@@ -52,7 +44,6 @@ export const ScrollToTop = () => {
       >
         <ChevronDown className="size-3.5 rotate-180" />
       </Button>
-    </div>,
-    document.body,
+    </div>
   );
 };

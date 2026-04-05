@@ -107,7 +107,7 @@ export const SearchTemplate = () => {
                 </div>
                 <h2 className="text-2xl font-bold text-foreground mb-2">No results found</h2>
                 <p className="text-muted-foreground max-w-xs bg-background/90 border border-border/50 rounded-lg px-4 py-3">
-                  We couldn't find any deals for that game. Try a different name or check your spelling.
+                  We couldn&apos;t find any deals for that game. Try a different name or check your spelling.
                 </p>
               </div>
             )}
@@ -139,7 +139,7 @@ export const SearchTemplate = () => {
             </div>
             <h2 className="text-2xl font-bold text-foreground mb-2">No results found</h2>
             <p className="text-muted-foreground max-w-xs">
-              We couldn't find any deals for that game. Try a different name or check your spelling.
+              We couldn&apos;t find any deals for that game. Try a different name or check your spelling.
             </p>
           </div>
         )}

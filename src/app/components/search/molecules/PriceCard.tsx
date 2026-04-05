@@ -4,6 +4,16 @@ import { GameCard } from "@/app/components/shared/molecules/GameCard";
 import { StoreIcon } from "@/app/components/shared/atoms/StoreIcon";
 import type { PriceResult } from "@/shared/lib/stores";
 
+function timeAgo(iso: string) {
+  const seconds = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
+  if (seconds < 60) return "Updated just now";
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `Updated ${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `Updated ${hours}h ago`;
+  return `Updated ${Math.floor(hours / 24)}d ago`;
+}
+
 type PriceCardProps = {
   price: PriceResult;
   index: number;
@@ -25,15 +35,6 @@ export const PriceCard = ({
   const priceCurrency = price.currency || "USD";
   const sName = price.store?.name || price.storeName || "";
 
-  const timeAgo = (iso: string) => {
-    const seconds = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
-    if (seconds < 60) return "Updated just now";
-    const minutes = Math.floor(seconds / 60);
-    if (minutes < 60) return `Updated ${minutes}m ago`;
-    const hours = Math.floor(minutes / 60);
-    if (hours < 24) return `Updated ${hours}h ago`;
-    return `Updated ${Math.floor(hours / 24)}d ago`;
-  };
 
   const hasDiscount = price.originalPrice && price.originalPrice > price.price;
   const discountPct = hasDiscount
