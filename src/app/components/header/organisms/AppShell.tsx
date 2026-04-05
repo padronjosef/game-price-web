@@ -26,7 +26,6 @@ export const AppShell = ({ children }: { children: React.ReactNode }) => {
   const error = useSearchStore((s) => s.error);
   const setError = useSearchStore((s) => s.setError);
 
-  const headerHeight = useUIStore((s) => s.headerHeight);
   const setHeaderHeight = useUIStore((s) => s.setHeaderHeight);
   const rateLimited = useUIStore((s) => s.rateLimited);
   const setRateLimited = useUIStore((s) => s.setRateLimited);
@@ -96,7 +95,7 @@ export const AppShell = ({ children }: { children: React.ReactNode }) => {
         <BackgroundImage crossfade={bgLayers} opacity={0.5} />
       </div>
 
-      <Header headerRef={headerRef} inputRef={inputRef} bgLayers={bgLayers} />
+      <Header headerRef={headerRef} inputRef={inputRef} />
 
       {children}
 
