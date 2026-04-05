@@ -1,9 +1,9 @@
 "use client";
 
-import { Button } from "@/app/components/shared/atoms/Button";
+import { Button } from "@/shared/UI/Button";
 import { StoreList } from "./StoreList";
-import { useFilterStore, selectAllStoresSelected, selectAllStoreNames } from "@/app/stores/useFilterStore";
-import { useSearchStore } from "@/app/stores/useSearchStore";
+import { useFilterStore, selectAllStoresSelected, selectAllStoreNames } from "@/shared/stores/useFilterStore";
+import { useSearchStore } from "@/shared/stores/useSearchStore";
 
 export const StoreSection = () => {
   const selectedStores = useFilterStore((s) => s.selectedStores);

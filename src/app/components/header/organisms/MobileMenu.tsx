@@ -2,17 +2,17 @@
 
 import Image from "next/image";
 import { Collapse } from "@/app/components/shared/atoms/Collapse";
-import { Expandable } from "@/app/components/shared/atoms/Expandable";
+import { Expandable } from "@/app/components/shared/molecules/Expandable";
 import { Checkbox } from "@/app/components/shared/atoms/Checkbox";
 import { StoreIcon } from "@/app/components/shared/atoms/StoreIcon";
 import { CheapestButton } from "../atoms/CheapestButton";
 import { ViewToggle } from "../atoms/ViewToggle";
-import { GLOBAL_CURRENCIES, LATAM_CURRENCIES, getCountryForCurrency } from "@/app/lib/currency";
-import { MAIN_STORES, STORE_ICONS } from "@/app/lib/stores";
-import type { CurrencyCode } from "@/app/lib/stores/types";
-import { useFilterStore, selectAllStoresSelected, selectAllStoreNames } from "@/app/stores/useFilterStore";
-import { useSearchStore } from "@/app/stores/useSearchStore";
-import { useUIStore } from "@/app/stores/useUIStore";
+import { GLOBAL_CURRENCIES, LATAM_CURRENCIES, getCountryForCurrency } from "@/shared/lib/currency";
+import { MAIN_STORES } from "@/shared/lib/stores";
+import type { CurrencyCode } from "@/shared/lib/stores/types";
+import { useFilterStore, selectAllStoresSelected, selectAllStoreNames } from "@/shared/stores/useFilterStore";
+import { useSearchStore } from "@/shared/stores/useSearchStore";
+import { useUIStore } from "@/shared/stores/useUIStore";
 
 const FlagIcon = ({ country }: { country: string }) => (
   <Image
@@ -60,8 +60,8 @@ export const MobileMenu = () => {
       ? new Set(allStoreNames)
       : selectedStores;
 
-  const mainStores = allStoreNames.filter((s) => MAIN_STORES.has(s));
-  const otherStores = allStoreNames.filter((s) => !MAIN_STORES.has(s));
+  const mainStores = allStoreNames.filter((s) => s in MAIN_STORES);
+  const otherStores = allStoreNames.filter((s) => !(s in MAIN_STORES));
 
   const handleCurrency = (code: CurrencyCode) => {
     setCurrency(code);
@@ -78,10 +78,10 @@ export const MobileMenu = () => {
         onClick={() => available && handleCurrency(c.code as CurrencyCode)}
         className={`px-3 py-1.5 rounded text-sm font-mono flex items-center gap-1.5 ${
           !available
-            ? "text-zinc-600 cursor-not-allowed brightness-50"
+            ? "text-muted-foreground/50 cursor-not-allowed brightness-50"
             : currency === c.code
-              ? "bg-zinc-700 text-white"
-              : "text-zinc-300 hover:bg-zinc-700 cursor-pointer"
+              ? "bg-border text-foreground"
+              : "text-foreground/80 hover:bg-border cursor-pointer"
         }`}
       >
         <FlagIcon country={c.country} />
@@ -98,11 +98,11 @@ export const MobileMenu = () => {
       <div
         key={store}
         onClick={() => toggleStore(store)}
-        className={`flex items-center gap-3 px-2 py-1.5 text-sm cursor-pointer hover:bg-zinc-700 rounded ${unavailable ? "brightness-50" : ""}`}
+        className={`flex items-center gap-3 px-2 py-1.5 text-sm cursor-pointer hover:bg-border rounded ${unavailable ? "brightness-50" : ""}`}
       >
         <Checkbox checked={isSelected} />
         <StoreIcon storeName={store} />
-        <span className={`truncate ${unavailable ? "text-zinc-500" : "text-white"}`}>
+        <span className={`truncate ${unavailable ? "text-muted-foreground" : "text-foreground"}`}>
           {store}
         </span>
       </div>
@@ -117,7 +117,7 @@ export const MobileMenu = () => {
       className="absolute left-0 right-0 top-full mt-1 z-400"
     >
       <div
-        className="bg-zinc-800 border border-zinc-600/50 rounded-lg px-4 py-4 flex flex-col gap-4 shadow-2xl max-h-[70vh] overflow-y-auto"
+        className="bg-muted border border-border/50 rounded-lg px-4 py-4 flex flex-col gap-4 shadow-2xl max-h-[70vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between">
@@ -143,7 +143,7 @@ export const MobileMenu = () => {
           rightSlot={
             <div className="flex items-center gap-2 text-sm">
               <FlagIcon country={getCountryForCurrency(currency)} />
-              <span className="font-bold text-white">{currency}</span>
+              <span className="font-bold text-foreground">{currency}</span>
             </div>
           }
         >
@@ -151,7 +151,7 @@ export const MobileMenu = () => {
             <div className="flex-1 flex flex-col gap-1">
               {GLOBAL_CURRENCIES.map(renderCurrencyItem)}
             </div>
-            <div className="w-px bg-zinc-700" />
+            <div className="w-px bg-border" />
             <div className="flex-1 flex flex-col gap-1">
               {LATAM_CURRENCIES.map(renderCurrencyItem)}
             </div>
@@ -159,11 +159,11 @@ export const MobileMenu = () => {
         </Expandable>
 
         <div className="flex items-center gap-2">
-          <hr className="flex-1 border-zinc-600" />
-          <span className="text-[10px] text-zinc-500">
+          <hr className="flex-1 border-border" />
+          <span className="text-[10px] text-muted-foreground">
             v{process.env.NEXT_PUBLIC_APP_VERSION}
           </span>
-          <hr className="flex-1 border-zinc-600" />
+          <hr className="flex-1 border-border" />
         </div>
 
         <Expandable

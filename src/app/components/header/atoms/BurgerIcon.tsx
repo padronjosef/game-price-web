@@ -1,11 +1,13 @@
 type BurgerIconProps = {
   open: boolean;
+  onClick?: () => void;
 }
 
-export const BurgerIcon = ({ open }: BurgerIconProps) => {
+export const BurgerIcon = ({ open, onClick }: BurgerIconProps) => {
   return (
     <div
-      className={`w-8.5 h-8.5 flex items-center justify-center rounded-lg transition-colors ${open ? "text-white bg-zinc-600" : "text-zinc-300 bg-zinc-700"}`}
+      onClick={onClick}
+      className={`w-8.5 h-8.5 flex items-center justify-center rounded-lg transition-colors cursor-pointer ${open ? "text-foreground bg-muted-foreground/40" : "text-foreground/80 bg-border"}`}
     >
       <div className="w-4.5 h-3.5 flex flex-col justify-between relative">
         <span

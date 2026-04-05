@@ -1,7 +1,7 @@
 "use client";
 
-import { Button } from "@/app/components/shared/atoms/Button";
-import { FireIcon } from "@/app/components/shared/atoms/FireIcon";
+import { Button } from "@/shared/UI/Button";
+import { Flame } from "lucide-react";
 
 type CheapestButtonProps = {
   active: boolean;
@@ -15,8 +15,8 @@ export const CheapestButton = ({
   className = "",
 }: CheapestButtonProps) => {
   return (
-    <Button variant={active ? "success" : "ghost"} onClick={onClick} className={`w-fit shrink-0 ${className}`}>
-      <FireIcon />
+    <Button variant={active ? "default" : "outline"} onClick={onClick} className={`w-fit shrink-0 ${className}`}>
+      <Flame className="size-4" />
       Cheapest only
     </Button>
   );

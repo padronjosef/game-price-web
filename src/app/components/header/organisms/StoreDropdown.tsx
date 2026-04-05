@@ -1,10 +1,10 @@
 "use client";
 
 import { Checkbox } from "@/app/components/shared/atoms/Checkbox";
-import { Dropdown } from "@/app/components/shared/atoms/Dropdown";
+import { Dropdown } from "@/app/components/shared/molecules/Dropdown";
 import { StoreList } from "../molecules/StoreList";
-import { useFilterStore, selectAllStoresSelected, selectAllStoreNames } from "@/app/stores/useFilterStore";
-import { useSearchStore } from "@/app/stores/useSearchStore";
+import { useFilterStore, selectAllStoresSelected, selectAllStoreNames } from "@/shared/stores/useFilterStore";
+import { useSearchStore } from "@/shared/stores/useSearchStore";
 
 export const StoreDropdown = () => {
   const selectedStores = useFilterStore((s) => s.selectedStores);
@@ -29,7 +29,7 @@ export const StoreDropdown = () => {
       trigger={
         <>
           {!allStoresSelected && (
-            <span className="bg-zinc-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+            <span className="bg-black text-white text-[10px] rounded-full w-5 h-5 flex items-center justify-center font-medium">
               {noneSelected ? 0 : selectedStores.size}
             </span>
           )}
@@ -37,18 +37,18 @@ export const StoreDropdown = () => {
         </>
       }
       active={!allStoresSelected}
-      panelClassName="py-1 animate-fade-in-up"
+      panelClassName="py-1"
     >
       <button
         type="button"
         onClick={toggleAllStores}
-        className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-zinc-700 cursor-pointer"
+        className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-border cursor-pointer"
       >
         <Checkbox checked={allStoresSelected} />
-        <span className="text-zinc-200 font-medium">All stores</span>
+        <span className="text-foreground/90 font-medium">All stores</span>
       </button>
 
-      <div className="h-px bg-zinc-700 mx-2 my-1" />
+      <div className="h-px bg-border mx-2 my-1" />
 
       <StoreList
         allStoreNames={allStoreNames}

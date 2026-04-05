@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { Dropdown, useDropdownClose } from "@/app/components/shared/atoms/Dropdown";
-import { GLOBAL_CURRENCIES, LATAM_CURRENCIES, getCountryForCurrency } from "@/app/lib/currency";
-import type { CurrencyCode } from "@/app/lib/stores/types";
+import { Dropdown, useDropdownClose } from "@/app/components/shared/molecules/Dropdown";
+import { GLOBAL_CURRENCIES, LATAM_CURRENCIES, getCountryForCurrency } from "@/shared/lib/currency";
+import type { CurrencyCode } from "@/shared/lib/stores/types";
 
 type CurrencySelectorProps = {
   value: CurrencyCode;
@@ -57,10 +57,10 @@ const CurrencyButton = ({
         onMouseLeave={() => onHover(null)}
         className={`w-full text-left px-4 py-2 text-sm font-mono transition-colors flex items-center gap-2 ${
           !available
-            ? "text-zinc-600 cursor-not-allowed brightness-50"
+            ? "text-muted-foreground/50 cursor-not-allowed brightness-50"
             : value === currency.code
-              ? "bg-blue-600/30 text-blue-300"
-              : "text-zinc-300 hover:bg-zinc-700"
+              ? "bg-primary/30 text-primary"
+              : "text-foreground/80 hover:bg-border"
         }`}
       >
         <FlagIcon country={currency.country} />
@@ -68,7 +68,7 @@ const CurrencyButton = ({
       </button>
 
       {hoveredCode === currency.code && (
-        <div className="hidden md:block absolute right-full top-0 mr-2 px-3 py-2 bg-zinc-900 border border-zinc-600 rounded-lg text-xs text-zinc-300 whitespace-nowrap shadow-lg">
+        <div className="hidden md:block absolute right-full top-0 mr-2 px-3 py-2 bg-card border border-border rounded-lg text-xs text-foreground/80 whitespace-nowrap shadow-lg">
           {available ? currency.name : `${currency.name} (not available)`}
         </div>
       )}
@@ -94,7 +94,7 @@ export const CurrencySelector = ({
       panelClassName="min-w-54 py-2 grid grid-cols-2 gap-x-1"
     >
       <div>
-        <div className="px-3 py-1 text-xs font-bold text-white uppercase tracking-wider">
+        <div className="px-3 py-1 text-xs font-bold text-foreground uppercase tracking-wider">
           Global
         </div>
         {GLOBAL_CURRENCIES.map((c) => (
@@ -109,8 +109,8 @@ export const CurrencySelector = ({
           />
         ))}
       </div>
-      <div className="border-l border-zinc-700">
-        <div className="px-3 py-1 text-xs font-bold text-white uppercase tracking-wider">
+      <div className="border-l border-border">
+        <div className="px-3 py-1 text-xs font-bold text-foreground uppercase tracking-wider">
           Latam
         </div>
         {LATAM_CURRENCIES.map((c) => (

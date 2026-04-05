@@ -1,341 +1,107 @@
 "use client";
 
-import { useEffect, useRef, useMemo } from "react";
-import { useRouter, usePathname } from "next/navigation";
-import dynamic from "next/dynamic";
-import { HOME_BACKGROUNDS } from "@/app/lib/stores";
-import { HeaderSkeleton } from "../atoms/HeaderSkeleton";
-import { getHomeBackground } from "@/app/lib/storage";
+import { useEffect, useRef } from "react";
+import { HOME_BACKGROUNDS } from "@/shared/lib/stores";
+import { getHomeBackground } from "@/shared/lib/storage";
 import { BackgroundImage } from "@/app/components/shared/atoms/BackgroundImage";
-import { useCrossfade } from "@/app/hooks/useCrossfade";
+import { useCrossfade } from "@/shared/hooks/useCrossfade";
 import { Toast, ToastContainer } from "@/app/components/shared/molecules/Toast";
-import { TypeFilterBar } from "../molecules/TypeFilterBar";
 import { ResultsToast } from "../molecules/ResultsToast";
-import { SearchForm } from "../molecules/SearchForm";
-import { GameNameFilter } from "../molecules/GameNameFilter";
-import { ViewToggle } from "../atoms/ViewToggle";
-import { BurgerIcon } from "../atoms/BurgerIcon";
-import { CheapestButton } from "../atoms/CheapestButton";
-import { Button } from "@/app/components/shared/atoms/Button";
-import { FireIcon } from "@/app/components/shared/atoms/FireIcon";
-import { HomeIcon } from "@/app/components/shared/atoms/HomeIcon";
-import { ScrollToTop } from "@/app/components/shared/atoms/ScrollToTop";
-import { useFilterStore, selectAllStoresSelected } from "@/app/stores/useFilterStore";
-import { useSearchStore } from "@/app/stores/useSearchStore";
-import { useUIStore } from "@/app/stores/useUIStore";
-import { useDisplayPrices } from "@/app/stores/selectors";
-import type { TypeFilter } from "@/app/lib/stores";
-
-const CurrencySelector = dynamic(() =>
-  import("../molecules/CurrencySelector").then((m) => ({ default: m.CurrencySelector })),
-);
-const MobileMenu = dynamic(
-  () => import("./MobileMenu").then((m) => ({ default: m.MobileMenu })),
-  { ssr: false },
-);
-const StoreDropdown = dynamic(() =>
-  import("./StoreDropdown").then((m) => ({ default: m.StoreDropdown })),
-);
+import { ScrollToTop } from "@/app/components/shared/molecules/ScrollToTop";
+import { Footer } from "@/app/components/shared/organisms/Footer";
+import { Header } from "./Header";
+import { useFilterStore } from "@/shared/stores/useFilterStore";
+import { useSearchStore } from "@/shared/stores/useSearchStore";
+import { useUIStore } from "@/shared/stores/useUIStore";
+import { useDisplayPrices } from "@/shared/stores/selectors";
 
 export const AppShell = ({ children }: { children: React.ReactNode }) => {
-  const initializing = useSearchStore((s) => s.initializing);
-  const router = useRouter();
-  const pathname = usePathname();
   const headerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const homeBgRef = useRef<string>(HOME_BACKGROUNDS[0]);
 
-  // Filter store
-  const currency = useFilterStore((s) => s.currency);
-  const typeFilter = useFilterStore((s) => s.typeFilter);
-  const gameFilter = useFilterStore((s) => s.gameFilter);
-  const viewMode = useFilterStore((s) => s.viewMode);
-  const cheapestOnly = useFilterStore((s) => s.cheapestOnly);
-  const selectedStores = useFilterStore((s) => s.selectedStores);
-  const allStoresSelected = useFilterStore(selectAllStoresSelected);
-  const setCurrency = useFilterStore((s) => s.setCurrency);
-  const setTypeFilter = useFilterStore((s) => s.setTypeFilter);
-  const setGameFilter = useFilterStore((s) => s.setGameFilter);
-  const setViewMode = useFilterStore((s) => s.setViewMode);
-  const setCheapestOnly = useFilterStore((s) => s.setCheapestOnly);
-  const hydrate = useFilterStore((s) => s.hydrate);
-
-  // Search store
-  const query = useSearchStore((s) => s.query);
-  const setQuery = useSearchStore((s) => s.setQuery);
   const results = useSearchStore((s) => s.results);
   const loading = useSearchStore((s) => s.loading);
   const scraping = useSearchStore((s) => s.scraping);
   const error = useSearchStore((s) => s.error);
   const setError = useSearchStore((s) => s.setError);
-  const lastUpdated = useSearchStore((s) => s.lastUpdated);
-  const recentSearches = useSearchStore((s) => s.recentSearches);
-  const showRecent = useSearchStore((s) => s.showRecent);
-  const setShowRecent = useSearchStore((s) => s.setShowRecent);
-  const rates = useSearchStore((s) => s.rates);
-  const doSearch = useSearchStore((s) => s.doSearch);
-  const clearSearch = useSearchStore((s) => s.clearSearch);
 
-  // UI store
-  const mobileMenuOpen = useUIStore((s) => s.mobileMenuOpen);
-  const setMobileMenuOpen = useUIStore((s) => s.setMobileMenuOpen);
-  const inputFocused = useUIStore((s) => s.inputFocused);
-  const setInputFocused = useUIStore((s) => s.setInputFocused);
   const headerHeight = useUIStore((s) => s.headerHeight);
   const setHeaderHeight = useUIStore((s) => s.setHeaderHeight);
   const rateLimited = useUIStore((s) => s.rateLimited);
   const setRateLimited = useUIStore((s) => s.setRateLimited);
   const triggerFilterFade = useUIStore((s) => s.triggerFilterFade);
 
-  // Background crossfade
+  const selectedStores = useFilterStore((s) => s.selectedStores);
+  const cheapestOnly = useFilterStore((s) => s.cheapestOnly);
+  const typeFilter = useFilterStore((s) => s.typeFilter);
+  const gameFilter = useFilterStore((s) => s.gameFilter);
+  const currency = useFilterStore((s) => s.currency);
+  const viewMode = useFilterStore((s) => s.viewMode);
+  const hydrate = useFilterStore((s) => s.hydrate);
+
   const { layers: bgLayers, setImage: setBgImage } = useCrossfade();
-
-  // Derived
-  const gameNames = useMemo(() => {
-    if (!results) return [];
-    const seen = new Map<string, string>();
-    for (const p of results.prices) {
-      if (p.gameType === "game" && !seen.has(p.gameName)) {
-        seen.set(p.gameName, p.releaseDate);
-      }
-    }
-    return [...seen.entries()]
-      .sort((a, b) => new Date(b[1]).getTime() - new Date(a[1]).getTime())
-      .map(([name]) => name);
-  }, [results]);
-
-  const heroImage = useMemo(
-    () =>
-      results?.prices.find(
-        (p) =>
-          p.backgroundUrl &&
-          (gameFilter === "all"
-            ? p.gameType === "game"
-            : p.gameName === gameFilter),
-      )?.backgroundUrl,
-    [results, gameFilter],
-  );
-
   const displayPrices = useDisplayPrices();
 
-  // Handlers
-  const handleTypeChange = (type: TypeFilter) => {
-    setTypeFilter(type);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
+  const heroImage = results?.prices.find(
+    (p) =>
+      p.backgroundUrl &&
+      (gameFilter === "all" ? p.gameType === "game" : p.gameName === gameFilter),
+  )?.backgroundUrl;
 
-  const lastSearched = useSearchStore((s) => s.results?.game?.name || "");
-
-  const onSubmitSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    const term = query.trim();
-    if (term.length < 2) {
-      inputRef.current?.blur();
-      return;
-    }
-    inputRef.current?.blur();
-    router.push(`/search?q=${encodeURIComponent(term)}`);
-    doSearch(term);
-  };
-
-  const handleClear = () => {
-    clearSearch();
-    router.push("/");
-  };
-
-  const handleSelectRecent = (term: string) => {
-    setQuery(term);
-    router.push(`/search?q=${encodeURIComponent(term)}`);
-    doSearch(term);
-  };
-
-  // Effects
+  // Init
   useEffect(() => {
+    window.scrollTo(0, 0);
     hydrate();
     useSearchStore.getState().initRates();
     const saved = localStorage.getItem("recent_searches");
-    if (saved) useSearchStore.setState({ recentSearches: JSON.parse(saved) });
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      const normalized = parsed.map(
+        (s: string | { term: string; timestamp: number }) =>
+          typeof s === "string" ? { term: s, timestamp: Date.now() } : s,
+      );
+      useSearchStore.setState({ recentSearches: normalized.slice(0, 4) });
+    }
     useSearchStore.setState({ initializing: false });
     homeBgRef.current = getHomeBackground();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Header height observer
   useEffect(() => {
     const ro = new ResizeObserver(([entry]) =>
       setHeaderHeight(entry.contentRect.height),
     );
     if (headerRef.current) ro.observe(headerRef.current);
     return () => ro.disconnect();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Background
   useEffect(() => {
     const img = heroImage || homeBgRef.current;
     if (img) setBgImage(img);
   }, [heroImage, setBgImage]);
 
-  useEffect(() => {
-    if (!mobileMenuOpen) return;
-    const close = () => useUIStore.setState({ mobileMenuOpen: false });
-    window.addEventListener("scroll", close, { once: true });
-    return () => window.removeEventListener("scroll", close);
-  }, [mobileMenuOpen]);
-
+  // Filter fade
   useEffect(() => {
     triggerFilterFade();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedStores, cheapestOnly, typeFilter, gameFilter, currency, viewMode]);
-
-  if (initializing) return <HeaderSkeleton>{children}</HeaderSkeleton>;
 
   return (
     <div className="flex flex-col min-h-screen relative">
-      <div
-        className="fixed left-0 right-0 bottom-0 z-0 bg-zinc-950"
-        style={{ top: headerHeight }}
-      >
+      <div className="fixed inset-0 z-0 bg-background">
         <BackgroundImage crossfade={bgLayers} opacity={0.5} />
       </div>
 
-      {/* Mobile menu backdrop */}
-      <div
-        onClick={() => useUIStore.setState({ mobileMenuOpen: false })}
-        className={`md:hidden fixed inset-0 bg-black/50 z-499 transition-opacity duration-200 ${
-          mobileMenuOpen
-            ? "opacity-100 pointer-events-auto"
-            : "opacity-0 pointer-events-none"
-        }`}
-      />
+      <Header headerRef={headerRef} inputRef={inputRef} bgLayers={bgLayers} />
 
-      {/* Sticky header */}
-      <div
-        ref={headerRef}
-        className="sticky top-0 z-500 pt-4 pb-4 flex justify-center bg-zinc-950"
-      >
-        <BackgroundImage crossfade={bgLayers} opacity={0.5} />
-        <div className="w-full max-w-5xl px-4 flex flex-col items-center">
-          {/* Desktop header */}
-          <header className="hidden md:flex w-full text-center mb-4 relative flex-col items-center bg-black/70 rounded-lg px-5 py-3">
-            <div
-              className={`absolute top-2 left-2 z-10 transition-all duration-300 ${pathname !== "/" ? "opacity-100 scale-100" : "opacity-0 scale-0 pointer-events-none"}`}
-              onClick={() => { router.push("/"); clearSearch(); }}
-            >
-              <Button variant="dark" className="!h-[34px] !px-2">
-                <HomeIcon />
-              </Button>
-            </div>
-            <div className="absolute top-2 right-2 z-10">
-              <ViewToggle value={viewMode} onChange={setViewMode} />
-            </div>
-            <h1 className="text-3xl font-bold mb-1 flex items-center gap-2">
-              <FireIcon size={24} />
-              Game Price Finder
-            </h1>
-            <p className="text-zinc-200 text-sm">
-              Find the cheapest price across multiple stores
-            </p>
-            <span className="absolute bottom-2 right-3 text-[10px] text-zinc-500">
-              v{process.env.NEXT_PUBLIC_APP_VERSION}
-            </span>
-          </header>
-
-          {/* Mobile header bar */}
-          <div
-            className="md:hidden w-full mb-3 relative z-400 flex items-center bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-2.5 cursor-pointer"
-            onClick={() => setMobileMenuOpen((v) => !v)}
-          >
-            <div
-              className={`transition-all duration-300 ${pathname !== "/" ? "opacity-100" : "opacity-0 pointer-events-none invisible"}`}
-              onClick={(e) => { e.stopPropagation(); router.push("/"); clearSearch(); }}
-            >
-              <Button variant="dark" className="!h-[34px] !px-2">
-                <HomeIcon />
-              </Button>
-            </div>
-            <h1 className="text-lg font-bold text-white flex-1 text-center flex items-center justify-center gap-1.5">
-              <FireIcon size={18} />
-              Game Price Finder
-            </h1>
-            <BurgerIcon open={mobileMenuOpen} />
-            <MobileMenu />
-          </div>
-
-          {/* Desktop filter row */}
-          <div className="hidden md:flex gap-2 w-full mb-4 relative items-center">
-            <TypeFilterBar value={typeFilter} onChange={handleTypeChange} />
-            <CheapestButton
-              active={cheapestOnly}
-              onClick={() => setCheapestOnly(!cheapestOnly)}
-              className="ml-auto"
-            />
-            <CurrencySelector
-              value={currency}
-              onChange={setCurrency}
-              availableRates={rates}
-            />
-            <StoreDropdown />
-          </div>
-
-          {/* Desktop search */}
-          <SearchForm
-            query={query}
-            onQueryChange={setQuery}
-            onSubmit={onSubmitSearch}
-            onClear={handleClear}
-            onSelectRecent={handleSelectRecent}
-            loading={loading}
-            inputFocused={inputFocused}
-            onFocusChange={setInputFocused}
-            recentSearches={recentSearches}
-            showRecent={showRecent}
-            onShowRecentChange={setShowRecent}
-            lastSearched={lastSearched}
-            inputRef={inputRef}
-            variant="desktop"
-            className="hidden md:block w-full mb-5 relative"
-          />
-
-          {/* Mobile type filters */}
-          <TypeFilterBar
-            value={typeFilter}
-            onChange={handleTypeChange}
-            className="md:hidden w-full mb-3 relative"
-          />
-
-          {/* Mobile search */}
-          <SearchForm
-            query={query}
-            onQueryChange={setQuery}
-            onSubmit={onSubmitSearch}
-            onClear={handleClear}
-            onSelectRecent={handleSelectRecent}
-            loading={loading}
-            inputFocused={inputFocused}
-            onFocusChange={setInputFocused}
-            recentSearches={recentSearches}
-            showRecent={showRecent}
-            onShowRecentChange={setShowRecent}
-            lastSearched={lastSearched}
-            variant="mobile"
-            className="md:hidden w-full mb-4 relative"
-          />
-
-          {/* Game name filters */}
-          <GameNameFilter
-            gameNames={gameNames}
-            activeFilter={gameFilter}
-            onFilterChange={setGameFilter}
-          />
-        </div>
-      </div>
-
-      {/* Page content */}
       {children}
 
       <ResultsToast
-        resultCount={displayPrices?.length || 0}
         scraping={scraping}
-        lastUpdated={lastUpdated}
         visible={!loading && !!displayPrices && displayPrices.length > 0}
       />
 
@@ -352,6 +118,7 @@ export const AppShell = ({ children }: { children: React.ReactNode }) => {
         )}
       </ToastContainer>
 
+      <Footer />
       <ScrollToTop />
     </div>
   );
