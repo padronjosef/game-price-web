@@ -5,22 +5,24 @@ import type { PriceResult } from "../lib/stores";
 
 export const useDisplayPrices = () => {
   const results = useSearchStore((s) => s.results);
-  const typeFilter = useFilterStore((s) => s.typeFilter);
+  const selectedTypes = useFilterStore((s) => s.selectedTypes);
   const gameFilter = useFilterStore((s) => s.gameFilter);
   const selectedStores = useFilterStore((s) => s.selectedStores);
   const cheapestOnly = useFilterStore((s) => s.cheapestOnly);
   const allStoresSelected = useFilterStore(selectAllStoresSelected);
 
+  const allTypes = selectedTypes.length === 4;
+
   const filteredPrices = useMemo(
     () =>
       results?.prices.filter((p) => {
-        const matchesType = typeFilter === "all" || p.gameType === typeFilter;
+        const matchesType = allTypes || selectedTypes.includes(p.gameType);
         const storeName = p.store?.name || p.storeName || "";
         const matchesStore = allStoresSelected || selectedStores.has(storeName);
         if (gameFilter === "all") return matchesType && matchesStore;
         return matchesType && matchesStore && p.gameName === gameFilter;
       }),
-    [results, typeFilter, allStoresSelected, selectedStores, gameFilter],
+    [results, selectedTypes, allTypes, allStoresSelected, selectedStores, gameFilter],
   );
 
   const displayPrices = useMemo(() => {
@@ -49,19 +51,21 @@ export const useResultCount = () => {
 
 export const useOtherStoresCount = () => {
   const results = useSearchStore((s) => s.results);
-  const typeFilter = useFilterStore((s) => s.typeFilter);
+  const selectedTypes = useFilterStore((s) => s.selectedTypes);
   const gameFilter = useFilterStore((s) => s.gameFilter);
   const selectedStores = useFilterStore((s) => s.selectedStores);
   const allStoresSelected = useFilterStore(selectAllStoresSelected);
 
+  const allTypes = selectedTypes.length === 4;
+
   return useMemo(() => {
     if (!results || allStoresSelected) return 0;
     return results.prices.filter((p) => {
-      const matchesType = typeFilter === "all" || p.gameType === typeFilter;
+      const matchesType = allTypes || selectedTypes.includes(p.gameType);
       const storeName = p.store?.name || p.storeName || "";
       const matchesStore = !selectedStores.has(storeName);
       if (gameFilter === "all") return matchesType && matchesStore;
       return matchesType && matchesStore && p.gameName === gameFilter;
     }).length;
-  }, [results, typeFilter, gameFilter, selectedStores, allStoresSelected]);
+  }, [results, selectedTypes, allTypes, gameFilter, selectedStores, allStoresSelected]);
 };

@@ -62,9 +62,11 @@ export const MultiSelect = ({
 
   const countNoun = allLabel.replace(/^All\s*/i, "");
   const displayLabel =
-    allSelected || selected.length === 0
+    allSelected
       ? allLabel
-      : selected.length === 1
+      : selected.length === 0
+        ? `No ${countNoun}`
+        : selected.length === 1
         ? options.find((o) => o.value === selected[0])?.label ?? allLabel
         : `${selected.length} ${countNoun}`;
 
@@ -127,7 +129,7 @@ export const MultiSelect = ({
           >
             <Option
               label={allLabel}
-              checked={allSelected || selected.length === 0}
+              checked={allSelected}
               onClick={() => onChange(allSelected ? [] : [...allValues])}
             />
             {options.map((opt) => (
