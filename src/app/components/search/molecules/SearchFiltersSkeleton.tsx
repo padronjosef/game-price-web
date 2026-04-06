@@ -6,11 +6,11 @@ export const SearchFiltersSkeleton = () => (
       <div className="flex flex-wrap gap-3 items-center">
         <Skeleton className="h-8 w-32" />
         <Skeleton className="h-8 w-20" />
-        <Skeleton className="h-8 w-24" />
       </div>
       <div className="flex gap-3 items-center">
         <Skeleton className="h-8 w-24" />
         <Skeleton className="h-8 w-28" />
+        <Skeleton className="h-8 w-24" />
       </div>
     </div>
   </div>

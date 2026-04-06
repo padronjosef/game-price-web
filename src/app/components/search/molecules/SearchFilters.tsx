@@ -54,12 +54,12 @@ export const SearchFilters = () => {
             onChange={setCurrency}
             availableRates={rates}
           />
-          <StoreDropdown />
         </div>
         <GameNameFilter
           gameNames={gameNames}
           activeFilter={gameFilter}
           onFilterChange={setGameFilter}
+          storeSlot={<StoreDropdown />}
         />
       </div>
     </div>
