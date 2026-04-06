@@ -80,7 +80,10 @@ export const SearchTemplate = () => {
     [rates, currency, symbol],
   );
 
-  const showSkeleton = loading || (!results && !!q && !lastUpdated);
+  const queryPending = !!q && q !== prevQueryRef.current;
+  const doneLoading = !loading && !queryPending && !!results;
+  const hasData = doneLoading && !!displayPrices && displayPrices.length > 0;
+  const showSkeleton = loading || queryPending || (!doneLoading && !!q && !lastUpdated);
 
   return (
     <div className="flex-1 pb-4 relative z-10">
@@ -88,18 +91,20 @@ export const SearchTemplate = () => {
       <div className="max-w-5xl mx-auto px-4">
         {showSkeleton && <PriceGridSkeleton />}
 
-        {!loading && results && (
-          <>
-            <PriceGrid
-              prices={displayPrices || []}
-              viewMode={viewMode}
-              displayPrice={displayPrice}
-              visibleCount={visibleCount}
-              typeFilter={typeFilter}
-              showLoadMore={!!displayPrices && displayPrices.length > visibleCount}
-              sentinelRef={sentinelCallback}
-            />
+        {hasData && (
+          <PriceGrid
+            prices={displayPrices}
+            viewMode={viewMode}
+            displayPrice={displayPrice}
+            visibleCount={visibleCount}
+            typeFilter={typeFilter}
+            showLoadMore={displayPrices.length > visibleCount}
+            sentinelRef={sentinelCallback}
+          />
+        )}
 
+        {doneLoading && (
+          <>
             {displayPrices?.length === 0 && otherStoresCount === 0 && (
               <div className="flex flex-col items-center justify-center py-16 text-center">
                 <div className="size-20 rounded-2xl bg-background/90 border border-border/50 flex items-center justify-center mb-5">

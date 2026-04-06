@@ -31,6 +31,7 @@ type GameCardProps = {
   updatedAt?: string;
   bottomRight?: React.ReactNode;
   variant?: "grid" | "list";
+  priority?: boolean;
 };
 
 const cardAnimation = {
@@ -54,6 +55,7 @@ export const GameCard = ({
   updatedAt,
   bottomRight,
   variant = "grid",
+  priority = false,
 }: GameCardProps) => {
   const [imgError, setImgError] = useState(false);
 
@@ -85,6 +87,8 @@ export const GameCard = ({
               alt={name}
               fill
               sizes="64px"
+              loading={priority ? "eager" : "lazy"}
+  
               onError={() => setImgError(true)}
               className="object-cover"
             />
@@ -158,6 +162,8 @@ export const GameCard = ({
             alt={name}
             fill
             sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, 33vw"
+            loading={priority ? "eager" : "lazy"}
+
             onError={() => setImgError(true)}
             className="object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
           />

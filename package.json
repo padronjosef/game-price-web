@@ -1,5 +1,5 @@
 {
-  "name": "nuka-loot-web",
+  "name": "nukaloot-web",
   "version": "1.1.6",
   "private": true,
   "scripts": {
@@ -34,6 +34,7 @@
     "eslint": "9.39.4",
     "eslint-config-next": "16.2.2",
     "husky": "9.1.7",
+    "playwright": "^1.59.1",
     "tailwindcss": "4.2.2",
     "typescript": "5.9.3"
   }

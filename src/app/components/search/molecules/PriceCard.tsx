@@ -48,6 +48,7 @@ export const PriceCard = ({
       name={price.gameName}
       badges={badges}
       variant={variant}
+      priority={index < 6}
       storeIcon={<StoreIcon storeName={sName} />}
       storeName={sName}
       discount={discountPct}

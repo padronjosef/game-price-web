@@ -32,13 +32,14 @@ export const TopSellers = ({
       <div
         className={`animate-fade-in-up ${viewMode === "list" ? "space-y-3" : "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6"}`}
       >
-        {games.map((game) => (
+        {games.map((game, i) => (
             <GameCard
               key={game.appId}
               onClick={() => onSelect(game.name)}
               image={game.image}
               name={game.name}
               variant={viewMode}
+              priority={i < 3}
             />
           ))}
       </div>

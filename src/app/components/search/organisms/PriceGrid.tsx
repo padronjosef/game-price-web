@@ -88,7 +88,6 @@ export const PriceGrid = ({
   if (prices.length === 0) {
     return null;
   }
-
   if (typeFilter !== "all") {
     const visible = prices.slice(0, visibleCount);
     const skeletons = showLoadMore

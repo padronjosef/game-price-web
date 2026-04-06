@@ -62,7 +62,7 @@ jobs:
           context: .
           push: true
           platforms: linux/arm64
-          tags: ghcr.io/padronjosef/game-price-web:latest
+          tags: ghcr.io/padronjosef/nukaloot-web:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -72,4 +72,4 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
-          script: /opt/game-price-finder/game-price-infra/terraform/scripts/deploy.sh web
+          script: /opt/nukaloot/nukaloot-infra/terraform/scripts/deploy.sh web

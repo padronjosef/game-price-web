@@ -1,6 +1,6 @@
-# Game Price Web
+# Nukaloot Web
 
-Frontend for Game Price Finder. Compares video game prices across 20+ stores in real-time.
+Frontend for Nukaloot. Compares video game prices across 20+ stores in real-time.
 
 ## Tech Stack
 
@@ -127,16 +127,16 @@ src/app/
 - Docker
 - All 3 repos cloned as siblings:
   ```
-  game-price-finder/
-    game-price-web/
-    game-price-api/
-    game-price-infra/
+  nukaloot/
+    nukaloot-web/
+    nukaloot-api/
+    nukaloot-infra/
   ```
 
 ### Development
 
 ```bash
-cd game-price-infra
+cd nukaloot-infra
 docker compose up
 ```
 
@@ -172,5 +172,5 @@ Prefix commit messages to auto-bump:
 
 ## Related Repos
 
-- [game-price-api](https://github.com/padronjosef/game-price-api) -- NestJS backend with scraping and caching
-- [game-price-infra](https://github.com/padronjosef/game-price-infra) -- Docker Compose, Terraform, nginx, CI/CD
+- [nukaloot-api](https://github.com/padronjosef/nukaloot-api) -- NestJS backend with scraping and caching
+- [nukaloot-infra](https://github.com/padronjosef/nukaloot-infra) -- Docker Compose, Terraform, nginx, CI/CD
