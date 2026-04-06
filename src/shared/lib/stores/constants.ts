@@ -14,7 +14,7 @@ type StoreInfo = { file: string; ext: "png" | "svg"; url: string };
 
 export const MAIN_STORES: Record<string, StoreInfo> = {
   "Blizzard": { file: "blizzard", ext: "png", url: "https://shop.battle.net" },
-  "CDKeys": { file: "cdkeys", ext: "png", url: "https://www.cdkeys.com" },
+  "Loaded": { file: "loaded", ext: "png", url: "https://www.loaded.com" },
   "Eneba": { file: "eneba", ext: "png", url: "https://www.eneba.com" },
   "Epic Games": { file: "epicgames", ext: "svg", url: "https://store.epicgames.com" },
   "G2A": { file: "g2a", ext: "png", url: "https://www.g2a.com" },
