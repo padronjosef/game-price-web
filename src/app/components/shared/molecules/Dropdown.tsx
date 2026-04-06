@@ -49,7 +49,7 @@ export const Dropdown = ({
       </Button>
 
       <div
-        className={`absolute right-0 top-full mt-1 bg-muted border border-border rounded-lg shadow-2xl z-100 transition-all ${DROPDOWN_DURATION} origin-top ${
+        className={`absolute right-0 top-full mt-1 bg-muted border border-border rounded-lg shadow-2xl z-100 transition-all ${DROPDOWN_DURATION} origin-top max-w-[calc(100vw-32px)] ${
           open
             ? "opacity-100 scale-y-100 pointer-events-auto"
             : "opacity-0 scale-y-0 pointer-events-none"

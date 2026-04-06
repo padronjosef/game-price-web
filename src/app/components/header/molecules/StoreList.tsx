@@ -56,7 +56,7 @@ export const StoreList = ({
             key={group.label}
             className={
               layout === "columns"
-                ? `min-w-50 ${gi > 0 ? "border-l border-border" : ""}`
+                ? `min-w-0 flex-1 ${gi > 0 ? "border-l border-border" : ""}`
                 : "mb-5"
             }
           >
@@ -94,15 +94,15 @@ export const StoreList = ({
                           ? "Not available for this game"
                           : undefined
                     }
-                    className={`flex items-center gap-${layout === "stacked" ? "3" : "2"} px-${layout === "stacked" ? "2" : "3"} py-1.5 text-sm cursor-pointer hover:bg-border ${
+                    className={`flex items-center overflow-hidden gap-${layout === "stacked" ? "3" : "2"} px-${layout === "stacked" ? "2" : "3"} py-1.5 text-sm cursor-pointer hover:bg-border ${
                       layout === "stacked" ? "rounded" : ""
                     } ${isFailed ? "border border-red-500/60 rounded bg-red-500/5" : ""} ${unavailable && !isFailed ? "brightness-50" : ""}`}
                     onClick={() => onToggleStore(store)}
                   >
-                    <Checkbox checked={isSelected} />
-                    <StoreIcon storeName={store} />
+                    <span className="shrink-0"><Checkbox checked={isSelected} /></span>
+                    <span className="shrink-0"><StoreIcon storeName={store} /></span>
                     <span
-                      className={`${layout === "stacked" ? "truncate " : ""}${isFailed ? "text-red-400" : unavailable ? "text-muted-foreground" : "text-foreground"}`}
+                      className={`truncate ${isFailed ? "text-red-400" : unavailable ? "text-muted-foreground" : "text-foreground"}`}
                     >
                       {store}
                     </span>
