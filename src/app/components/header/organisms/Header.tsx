@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { SearchForm } from "../molecules/SearchForm";
 import { ViewToggle } from "../atoms/ViewToggle";
@@ -34,6 +35,14 @@ export const Header = ({ headerRef, inputRef }: HeaderProps) => {
 
   const inputFocused = useUIStore((s) => s.inputFocused);
   const setInputFocused = useUIStore((s) => s.setInputFocused);
+
+  const [apiVersion, setApiVersion] = useState<string | null>(null);
+  useEffect(() => {
+    fetch("/api/version")
+      .then((r) => r.json())
+      .then((d) => setApiVersion(d.version))
+      .catch(() => {});
+  }, []);
 
   const onSubmitSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -76,7 +85,7 @@ export const Header = ({ headerRef, inputRef }: HeaderProps) => {
                 <Radiation className="size-6 rounded-full" />
                 Nukaloot
               </h1>
-              <span className="text-[9px] text-muted-foreground -mt-1 ml-8">v{pkg.version}</span>
+              <span className="text-[9px] text-muted-foreground -mt-1 ml-8">v{pkg.version}{apiVersion ? ` / api v${apiVersion}` : ""}</span>
             </div>
 
             <div className="flex items-center gap-2 flex-1 max-w-150 min-w-0">
@@ -119,7 +128,7 @@ export const Header = ({ headerRef, inputRef }: HeaderProps) => {
                 <Radiation className="size-5.5 rounded-full" />
                 Nukaloot
               </h1>
-              <span className="text-[9px] text-muted-foreground -mt-1 ml-8">v{pkg.version}</span>
+              <span className="text-[9px] text-muted-foreground -mt-1 ml-8">v{pkg.version}{apiVersion ? ` / api v${apiVersion}` : ""}</span>
             </div>
 
             <ViewToggle value={viewMode} onChange={setViewMode} />
