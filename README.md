@@ -61,8 +61,9 @@ src/app/
     search/page.tsx               Search page → SearchTemplate (Suspense boundary)
   api/
     games/featured/route.ts       Proxy to backend
-    games/upcoming/route.ts       Proxy to backend
+    games/top-sellers/route.ts    Proxy to backend
     search/stream/route.ts        SSE proxy to backend
+    version/route.ts              Proxy API version endpoint
   components/
     shared/
       atoms/                      Button, CloseButton, Dropdown, FireIcon, Skeleton,
@@ -102,7 +103,7 @@ src/app/
 
 ## Key Features
 
-- **SSE streaming search** -- progressive loading, fast sources first (Steam + CheapShark), slow scrapers after (Instant Gaming)
+- **SSE streaming search** -- progressive loading, fast sources first (Steam + CheapShark + Kinguin), slow scrapers after (Instant Gaming, Eneba, G2A, Loaded)
 - **Multi-currency** -- 12 currencies split into Global (USD, EUR, GBP, JPY, CAD, AUD) and Latam (COP, BRL, MXN, ARS, CLP, PEN) with live exchange rates
 - **Store filtering** -- 20+ stores with grouped checkboxes (main stores / other stores), select all/deselect all
 - **Type filtering** -- All, Base Game, DLC, Bundle tabs
@@ -116,7 +117,7 @@ src/app/
 - **Recent searches** -- localStorage persisted, grid with close buttons
 - **Background crossfade** -- hero image transitions between game backgrounds
 - **Mobile menu** -- collapsible with scroll-to-top on close, store section, currency selector
-- **Version display** -- shown in desktop header (bottom-right) and mobile menu (separator between currency and stores)
+- **Version display** -- shows web and API versions below the logo in both desktop and mobile headers (fetches API version from `/api/version` on mount)
 - **Open Graph image** -- auto-generated with fire icon for link previews
 - **Scrollbar stability** -- forced visible to prevent horizontal layout shift
 
@@ -148,15 +149,17 @@ docker compose up
 | Variable | Description |
 |----------|-------------|
 | `INTERNAL_API_URL` | Backend URL (server-side, default `http://api:3000` in Docker) |
-| `NEXT_PUBLIC_APP_VERSION` | Auto-set from package.json via next.config.ts |
+| `NEXT_PUBLIC_APP_VERSION` | Auto-set from package.json via next.config.ts (unused, version now read directly from package.json) |
 
 ## Deployment
 
-GitHub Actions on push to `main`:
+GitHub Actions on push to `main` using native ARM runners (`ubuntu-24.04-arm`):
 1. Runs `scripts/bump-version.sh` (if commit has version prefix)
-2. Amends commit with version bump + force push
-3. Creates git tag and GitHub Release with changelog
-4. SSH into EC2 and runs `deploy.sh web`
+2. Builds and pushes Docker image to GHCR
+3. SSH into EC2 and runs `deploy.sh web`
+4. If version was bumped: pushes version commit and creates GitHub Release with changelog
+
+Job timeout: 10 minutes.
 
 ### Pre-push Hook (Husky)
 
